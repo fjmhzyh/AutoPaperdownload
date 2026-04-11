@@ -2,6 +2,7 @@ import csv
 import os
 import re
 import logging
+from log_utils import setup_script_logging
 
 # 项目根目录（自动获取）
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,4 +58,5 @@ def process():
     print(f"提取完成！找到: {len(dois)}，新增: {new_count}")
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     process()

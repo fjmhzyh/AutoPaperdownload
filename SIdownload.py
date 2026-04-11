@@ -6,6 +6,7 @@ import pyautogui
 from datetime import datetime
 import json
 import random
+from log_utils import setup_script_logging
 from platform_compat import (
     get_default_edge_browser_path,
     hotkey,
@@ -645,5 +646,6 @@ class PaperProcessor:
         print(f"{'='*50}")
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     processor = PaperProcessor()
     processor.run()

@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import re
+from log_utils import setup_script_logging
 from platform_compat import is_windows
 
 # ==============================================================================
@@ -449,6 +450,7 @@ class PaperAutomationConsole:
             self.execute_script(self.SCRIPTS["getdoi"])
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     root = tk.Tk()
     PaperAutomationConsole(root)
     root.mainloop()

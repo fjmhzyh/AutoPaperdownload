@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import requests
 import xml.etree.ElementTree as ET
 import platform
+from log_utils import setup_script_logging
 from platform_compat import (
     get_browser_process_names,
     get_default_edge_browser_path,
@@ -529,6 +530,7 @@ def main():
         logger.info("="*50 + "\n")
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     # 创建必要的目录
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)

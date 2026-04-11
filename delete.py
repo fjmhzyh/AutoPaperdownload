@@ -1,6 +1,7 @@
 import csv
 import os
 import sys
+from log_utils import setup_script_logging
 
 def delete_success_files(csv_path):
     """
@@ -89,6 +90,7 @@ def delete_success_files(csv_path):
             print(f"- {file}: {error}")
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     # =====================================================
     # 在这里直接设置CSV文件路径（修改为您实际的CSV文件路径）
     # =====================================================

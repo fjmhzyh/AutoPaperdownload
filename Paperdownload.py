@@ -16,6 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 import random
+from log_utils import setup_script_logging
 from platform_compat import (
     get_browser_process_names,
     get_default_edge_browser_path,
@@ -2119,6 +2120,7 @@ class PaperProcessor:
 
 
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     # 确保关闭所有浏览器进程
     ProcessManager.kill_browser_processes()
     

@@ -1,5 +1,6 @@
 import csv
 import os
+from log_utils import setup_script_logging
 
 # 项目根目录（自动获取）
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -70,6 +71,7 @@ def filter_failed_dois(input_file, output_file):
 
 # 使用示例
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     # 在这里指定输入和输出文件路径
     input_file = os.path.join(_BASE_DIR, "PaperDoi_updated.csv")  # 替换为您的输入文件路径
     output_file = os.path.join(_BASE_DIR, "PaperDoi_failed.csv")  # 替换为您的输出文件路径

@@ -4,6 +4,7 @@
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 import csv
 import re
+from log_utils import setup_script_logging
 
 def advanced_path_matching_process(folder_path, csv_file_path, output_csv_path):
     """
@@ -141,6 +142,7 @@ def matches_file_path(csv_cell_value, pdf_filename, pdf_full_path, base_folder):
 
 # 使用增强版
 if __name__ == "__main__":
+    setup_script_logging(__file__)
     advanced_path_matching_process(
         os.path.join(_BASE_DIR, "Paper"), os.path.join(_BASE_DIR, "PaperDoi_updated.csv"), os.path.join(_BASE_DIR, "PaperDoi_updated_clean.csv")
     )
