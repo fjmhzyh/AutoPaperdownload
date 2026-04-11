@@ -1,0 +1,345 @@
+{
+    "default": {
+        "use_ctrl_s": true,
+        "ctrl_s_delay": 40,
+        "max_retries": 3,
+        "retry_delay": 15
+    },
+    "domains": {
+        "pubs.acs.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.mdpi.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay":40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.tandfonline.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "advanced.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "aiche.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "analyticalsciencejournals.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "link.springer.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 140
+        },
+        "www.frontiersin.org": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.stm-journal.ru": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "journals.plos.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.cell.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "biomedical-engineering-online.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "iopscience.iop.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "ieeexplore.ieee.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.thno.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "oiccpress.comm": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "stemcellres.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 15
+        },
+        "arthritis-research.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "karger.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.nature.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.dovepress.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "turkishneurosurgery.org.tr": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "pubs.rsc.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "journals.sagepub.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.science.org": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+       "www.sciencedirect.com":{
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "sage.cnpereading.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.tjtes.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "bmcbiotechnol.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "journals.lww.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.jospt.org": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.thieme-connect.de": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "bmcmusculoskeletdisord.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.journalslibrary.nihr.ac.uk": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "actaorthop.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "cdnsciencepub.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "www.jrheum.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, "jnanobiotechnology.biomedcentral.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+         "spandidos-publications.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "portlandpress.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "pnas.org": {
+            "use_ctrl_s": false,                
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "chemistry-europe.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,                
+            "max_retries": 1,
+            "retry_delay":40
+        },
+        "elifesciences.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,                
+            "retry_delay": 40
+        },
+        "cambridge.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+         "febs.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, 
+        "oncotarget.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, 
+        "dom-pubs.pericles-prod.literatumonline.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, 
+        "pubs.aip.org": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, 
+        "academic.oup.com": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }, 
+        "jstage.jst.go.jp": {
+            "use_ctrl_s": true,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "trialsjournal.biomedcentral.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "acrjournals.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "bvajournals.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "beva.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        },
+        "esskajournals.onlinelibrary.wiley.com": {
+            "use_ctrl_s": false,
+            "ctrl_s_delay": 40,
+            "max_retries": 1,
+            "retry_delay": 40
+        }
+    }
+}

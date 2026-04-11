@@ -1,0 +1,30 @@
+# AutoPaperdownload Project Requirements
+# Academic Paper Auto-download System Dependencies
+
+# Core Automation Libraries
+pyautogui>=0.9.54
+pyperclip>=1.8.2
+psutil>=5.9.0
+
+# Web Automation
+selenium>=4.15.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Image Processing
+Pillow>=10.0.0
+opencv-python>=4.8.0
+
+# Data Processing (standard library - no installation needed)
+# tkinter, csv, json, re, os, time, subprocess, webbrowser, urllib, datetime, typing, random
+
+# Optional Enhancements
+pandas>=1.5.0
+numpy>=1.24.0
+colorama>=0.4.6
+
+# Development Tools
+flake8>=6.0.0
+black>=23.0.0
+pytest>=7.4.0
