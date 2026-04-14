@@ -6,3 +6,11 @@ Paper
 SI
 .idea
 log/
+build/
+dist/
+release/
+__pycache__/
+*.pyc
+*.spec
+.pyinstaller-cache/
+.smoke-data/

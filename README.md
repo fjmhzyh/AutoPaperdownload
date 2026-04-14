@@ -115,6 +115,47 @@ python config_manager.py
 - **清理无效文件**：运行 `筛选文件大小.py` 剔除空壳/损坏文件
 - **失败重试**：运行 `Csv_Turner_strenth.py` 提取失败 DOI，重新下载
 
+## 📦 安装包构建（Windows + macOS）
+
+### 运行时目录说明
+
+- 开发态（`python config_manager.py`）：默认直接使用项目根目录作为数据目录。
+- 打包态（安装包运行）：
+  - Windows：`%LOCALAPPDATA%/AutoPaperdownload`
+  - macOS：`~/Library/Application Support/AutoPaperdownload`
+- 程序会在数据目录自动创建：`log/`、`html/`、`RSS/`、`Paper/`、`SI/`，并在首次启动时自动复制默认 JSON/CSV。
+
+### macOS 构建
+
+```bash
+pip install pyinstaller
+bash scripts/build_mac.sh
+```
+
+- 产物：
+  - `dist/AutoPaperdownload.app`
+  - `release/mac/AutoPaperdownload-<version>-mac-arm64.dmg`
+- 首次运行需在系统设置授权：
+  - 辅助功能（Accessibility）
+  - 屏幕录制（Screen Recording）
+
+### Windows 构建
+
+```powershell
+pip install pyinstaller
+powershell -ExecutionPolicy Bypass -File .\scripts\build_win.ps1
+```
+
+- 产物：
+  - `release/win/AutoPaperdownload-Setup-<version>-win64.exe`（安装包，需本机已安装 Inno Setup）
+  - 若未安装 Inno Setup，则至少产出 `dist/AutoPaperdownload/` 可分发目录
+
+### 安装包目标
+
+- 不依赖目标机器预装 Python。
+- GUI 通过 worker 可执行文件调度 `getdoi/paper/si` 及辅助脚本，不再依赖 `python xxx.py`。
+- 所有运行日志统一写入数据目录下 `log/`。
+
 ## 🌐 添加新网站支持
 
 通过 GUI 的"域名规则向导"三步完成，或手动编辑配置文件：

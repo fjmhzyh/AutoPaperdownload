@@ -14,28 +14,47 @@ from platform_compat import (
     open_url,
     resource_path,
 )
+from runtime_config import load_runtime_config
+from runtime_paths import bundle_path, data_path, ensure_runtime_layout, get_bundle_dir
 
-# 项目根目录（自动获取）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ensure_runtime_layout()
+_BUNDLE_DIR = get_bundle_dir()
 
 # 全局配置
 CONFIG = {
-    "DOWNLOAD_PATH": os.path.join(_BASE_DIR, "html"),  # HTML保存路径
-    "JSON_PATH": os.path.join(_BASE_DIR, "SIkeyword.json"),  # 关键词json路径
-    "CSV_PATH": os.path.join(_BASE_DIR, "PaperDoi.csv"),  # 论文列表CSV
+    "DOWNLOAD_PATH": data_path("html"),  # HTML保存路径
+    "JSON_PATH": data_path("SIkeyword.json"),  # 关键词json路径
+    "CSV_PATH": data_path("PaperDoi.csv"),  # 论文列表CSV
     "EDGE_DRIVER_PATH": os.path.join(
-        _BASE_DIR, "edgedriver", "msedgedriver.exe" if is_windows() else "msedgedriver"
+        _BUNDLE_DIR, "edgedriver", "msedgedriver.exe" if is_windows() else "msedgedriver"
     ),  # Selenium驱动路径
     "EDGE_BROWSER_PATH": get_default_edge_browser_path(),
     "USE_SELENIUM": False,  # 是否使用Selenium方案
     "DELAY_BETWEEN_PAPERS": 5,  # 每篇论文间隔时间(秒)
     "PAGE_LOAD_TIMEOUT": 40,  # 页面加载超时时间(秒)
     "DOCUMENT_EXTENSIONS": ["pdf", "docx", "doc", "zip"],  # 支持的文档扩展名
-    "SI_DOWNLOAD_FOLDER": os.path.join(_BASE_DIR, "SI"),  # SI下载文件夹
+    "SI_DOWNLOAD_FOLDER": data_path("SI"),  # SI下载文件夹
     "RANDOM_DELAY_RANGE": (0.8, 1.2),  # 延迟随机倍数  
     "MOUSE_MOVEMENT_STEPS": (5, 10),   # 鼠标移动步数  
     "HUMAN_BEHAVIOR_PROB": 0.3,        # 人性化行为概率
 }
+
+
+def apply_runtime_config():
+    def _to_bool(value):
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+    cfg = load_runtime_config()
+    paths = cfg.get("paths", {})
+    params = cfg.get("params", {})
+    CONFIG["DOWNLOAD_PATH"] = paths.get("DOWNLOAD_PATH", CONFIG["DOWNLOAD_PATH"])
+    CONFIG["CSV_PATH"] = paths.get("CSV_PATH", CONFIG["CSV_PATH"])
+    CONFIG["SI_DOWNLOAD_FOLDER"] = paths.get("SI_FOLDER", CONFIG["SI_DOWNLOAD_FOLDER"])
+    CONFIG["USE_SELENIUM"] = _to_bool(params.get("USE_SELENIUM", CONFIG["USE_SELENIUM"]))
+    CONFIG["DELAY_BETWEEN_PAPERS"] = int(params.get("DELAY_SI", CONFIG["DELAY_BETWEEN_PAPERS"]))
+    CONFIG["PAGE_LOAD_TIMEOUT"] = int(params.get("TIMEOUT", CONFIG["PAGE_LOAD_TIMEOUT"]))
 
 class PaperProcessor:
     def __init__(self):
@@ -508,7 +527,7 @@ class PaperProcessor:
                 self.simulate_human_behavior()  
                 time.sleep(CONFIG["PAGE_LOAD_TIMEOUT"])
                 self.simulate_human_behavior()
-                download_button_image = resource_path("photos", "download.png", base_dir=_BASE_DIR)
+                download_button_image = resource_path("photos", "download.png", base_dir=_BUNDLE_DIR)
                 if not os.path.exists(download_button_image):
                     print(f"[警告] 未找到下载按钮参考图: {download_button_image}")
                     return None
@@ -645,7 +664,12 @@ class PaperProcessor:
         print(f"平均每篇用时: {elapsed.total_seconds()/total:.1f}秒")
         print(f"{'='*50}")
 
-if __name__ == "__main__":
-    setup_script_logging(__file__)
+def main_entry():
+    apply_runtime_config()
+    setup_script_logging(__file__, script_name="SIdownload")
     processor = PaperProcessor()
     processor.run()
+
+
+if __name__ == "__main__":
+    main_entry()

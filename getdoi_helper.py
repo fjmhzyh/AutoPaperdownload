@@ -5,7 +5,6 @@ import sys
 import pyautogui
 import pyperclip
 import re
-import subprocess
 import logging
 import psutil
 import traceback  # 添加traceback用于详细错误日志
@@ -22,21 +21,26 @@ from platform_compat import (
     open_url,
     resource_path,
 )
+from runtime_config import load_runtime_config
+from runtime_exec import run_worker_blocking
+from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir, get_data_dir
 
-# 项目根目录（自动获取）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ensure_runtime_layout()
+
+_BUNDLE_DIR = get_bundle_dir()
+_DATA_DIR = get_data_dir()
 
 # 配置参数
 WEBSITE_URL = "https://pubmed.ncbi.nlm.nih.gov/"
 SEARCH_QUERY = "(PCL) AND (Light curing)"
-OUTPUT_FOLDER = os.path.join(_BASE_DIR, "RSS")
-CSV_FILE = os.path.join(_BASE_DIR, "PaperDoi.csv")
+OUTPUT_FOLDER = data_path("RSS")
+CSV_FILE = data_path("PaperDoi.csv")
 BROWSER_PATH = get_default_edge_browser_path()
-RSS_PNG = resource_path("photos", "RSS.png", base_dir=_BASE_DIR)
-CREATE_PNG = resource_path("photos", "create.png", base_dir=_BASE_DIR)
-NEXT_PROGRAM = os.path.join(_BASE_DIR, "Paperdownload.py")
-NEW_PROGRAM = os.path.join(_BASE_DIR, "SIdownload.py")
-LOG_FILE = os.path.join(_BASE_DIR, "doi_extractor.log")
+RSS_PNG = resource_path("photos", "RSS.png", base_dir=_BUNDLE_DIR)
+CREATE_PNG = resource_path("photos", "create.png", base_dir=_BUNDLE_DIR)
+NEXT_PROGRAM = "Paperdownload.py"
+NEW_PROGRAM = "SIdownload.py"
+LOG_FILE = data_path("log", "doi_extractor.log")
 
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
@@ -53,6 +57,20 @@ logger = logging.getLogger(__name__)
 
 pyautogui.PAUSE = 1
 pyautogui.FAILSAFE = True
+
+
+def apply_runtime_config() -> None:
+    global SEARCH_QUERY, OUTPUT_FOLDER, CSV_FILE
+    cfg = load_runtime_config()
+    params = cfg.get("params", {})
+    paths = cfg.get("paths", {})
+
+    SEARCH_QUERY = str(params.get("SEARCH_QUERY", SEARCH_QUERY)).strip() or SEARCH_QUERY
+    CSV_FILE = paths.get("CSV_PATH", CSV_FILE)
+    OUTPUT_FOLDER = data_path("RSS")
+
+    os.makedirs(os.path.dirname(CSV_FILE), exist_ok=True)
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 
 def locate_on_screen_safe(image_path: str, confidences=(0.9, 0.8, 0.7), retries: int = 2):
@@ -283,24 +301,18 @@ def is_program_running(program_name: str) -> bool:
 def run_next_program():
     """运行下一个Python程序"""
     try:
-        if os.path.exists(NEXT_PROGRAM):
-            logger.info(f"\n正在启动下一个程序: {NEXT_PROGRAM}")
-            subprocess.run([sys.executable, NEXT_PROGRAM])
-            logger.info("下一个程序已启动")
-        else:
-            logger.error(f"未找到下一个程序: {NEXT_PROGRAM}")
+        logger.info(f"\n正在启动下一个程序: {NEXT_PROGRAM}")
+        run_worker_blocking("paper", cwd=_DATA_DIR)
+        logger.info("下一个程序已完成")
     except Exception as e:
         logger.error(f"启动下一个程序失败: {e}")
 
 def run_new_program():
     """运行新的程序"""
     try:
-        if os.path.exists(NEW_PROGRAM):
-            logger.info(f"\n正在启动新程序: {NEW_PROGRAM}")
-            subprocess.run([sys.executable, NEW_PROGRAM])
-            logger.info("新程序已启动")
-        else:
-            logger.error(f"未找到新程序: {NEW_PROGRAM}")
+        logger.info(f"\n正在启动新程序: {NEW_PROGRAM}")
+        run_worker_blocking("si", cwd=_DATA_DIR)
+        logger.info("新程序已完成")
     except Exception as e:
         logger.error(f"启动新程序失败: {e}")
 
@@ -529,15 +541,15 @@ def main():
         logger.info("开始新一轮执行...")
         logger.info("="*50 + "\n")
 
-if __name__ == "__main__":
-    setup_script_logging(__file__)
-    # 创建必要的目录
+def main_entry():
+    apply_runtime_config()
+    setup_script_logging(__file__, script_name="getdoi_helper")
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-    
-    # 记录程序开始时间
     start_time = datetime.now()
     logger.info(f"程序启动于: {start_time}")
-    
-    # 运行主程序
     main()
+
+
+if __name__ == "__main__":
+    main_entry()

@@ -4,6 +4,8 @@ import sys
 from datetime import datetime
 from typing import List, TextIO
 
+from runtime_paths import ensure_runtime_layout, get_log_dir
+
 
 _ACTIVE_LOG_HANDLES: List[TextIO] = []
 
@@ -39,20 +41,19 @@ class TeeStream:
         return False
 
 
-def setup_script_logging(script_file: str) -> str:
+def setup_script_logging(script_file: str, script_name: str = "") -> str:
     """
     为脚本开启日志双写:
     - 控制台正常显示
     - 同时写入项目根目录/log/<script>_<timestamp>.log
     """
+    ensure_runtime_layout()
     script_path = os.path.abspath(script_file)
-    base_dir = os.path.dirname(script_path)
-    script_name = os.path.splitext(os.path.basename(script_path))[0]
-
-    log_dir = os.path.join(base_dir, "log")
+    resolved_script_name = script_name or os.path.splitext(os.path.basename(script_path))[0]
+    log_dir = get_log_dir()
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = os.path.join(log_dir, f"{script_name}_{timestamp}.log")
+    log_path = os.path.join(log_dir, f"{resolved_script_name}_{timestamp}.log")
 
     file_stream = open(log_path, "a", encoding="utf-8", buffering=1)
     _ACTIVE_LOG_HANDLES.append(file_stream)

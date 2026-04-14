@@ -25,9 +25,12 @@ from platform_compat import (
     open_url,
     resource_path,
 )
+from runtime_config import load_runtime_config
+from runtime_paths import bundle_path, data_path, ensure_runtime_layout, get_bundle_dir, get_data_dir
 
-# 项目根目录（自动获取）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ensure_runtime_layout()
+_BUNDLE_DIR = get_bundle_dir()
+_DATA_DIR = get_data_dir()
 
 
 def _default_watch_dirs() -> List[str]:
@@ -45,15 +48,15 @@ def _default_watch_dirs() -> List[str]:
 # 全局配置
 class Config:
     """应用程序配置类"""
-    DOWNLOAD_PATH = r"./html"  # HTML保存路径
-    JSON_PATH = os.path.join(_BASE_DIR, "Paperkeyword.json")  # 关键词json路径
-    DOMAIN_BRANCH_JSON = os.path.join(_BASE_DIR, "DomainBranch.json")  # 域名分支配置
-    DOWNLOAD_TEMPLATE_JSON = os.path.join(_BASE_DIR, "DownloadTemplates.json")  # 下载模板配置
-    DOWNLOAD_SETTINGS_JSON = os.path.join(_BASE_DIR, "DownloadSettings.json")  # 下载设置配置
-    LOGIN_CONFIG_JSON = os.path.join(_BASE_DIR, "LoginConfig.json")  # 登录配置路径
-    CSV_PATH = r"./PaperDoi.csv"  # 论文列表CSV
+    DOWNLOAD_PATH = data_path("html")  # HTML保存路径
+    JSON_PATH = data_path("Paperkeyword.json")  # 关键词json路径
+    DOMAIN_BRANCH_JSON = data_path("DomainBranch.json")  # 域名分支配置
+    DOWNLOAD_TEMPLATE_JSON = data_path("DownloadTemplates.json")  # 下载模板配置
+    DOWNLOAD_SETTINGS_JSON = data_path("DownloadSettings.json")  # 下载设置配置
+    LOGIN_CONFIG_JSON = data_path("LoginConfig.json")  # 登录配置路径
+    CSV_PATH = data_path("PaperDoi.csv")  # 论文列表CSV
     EDGE_DRIVER_PATH = os.path.join(
-        _BASE_DIR,
+        _BUNDLE_DIR,
         "edgedriver",
         "msedgedriver.exe" if is_windows() else "msedgedriver",
     )  # Selenium驱动路径
@@ -62,14 +65,14 @@ class Config:
     DELAY_BETWEEN_PAPERS = 60  # 每篇论文间隔时间(秒)
     PAGE_LOAD_TIMEOUT = 40  # 页面加载超时时间(秒)
     DOCUMENT_EXTENSIONS = ["pdf"]  # 支持的文档扩展名
-    PAPER_DOWNLOAD_FOLDER = r"./Paper"  # Paper下载文件夹
+    PAPER_DOWNLOAD_FOLDER = data_path("Paper")  # Paper下载文件夹
     EXTRA_WATCH_DIRS = _default_watch_dirs()  # 额外监听下载目录（Windows/mac常见下载目录）
 
     @classmethod
     def _resolve_path(cls, path: str) -> str:
         if os.path.isabs(path):
             return path
-        return os.path.abspath(os.path.join(_BASE_DIR, path))
+        return os.path.abspath(os.path.join(_DATA_DIR, path))
 
     @classmethod
     def normalize_paths(cls):
@@ -85,6 +88,26 @@ class Config:
         cls.normalize_paths()
         os.makedirs(cls.DOWNLOAD_PATH, exist_ok=True)
         os.makedirs(cls.PAPER_DOWNLOAD_FOLDER, exist_ok=True)
+
+    @classmethod
+    def apply_runtime_config(cls):
+        def _to_bool(value):
+            if isinstance(value, bool):
+                return value
+            return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+        cfg = load_runtime_config()
+        paths = cfg.get("paths", {})
+        params = cfg.get("params", {})
+
+        cls.DOWNLOAD_PATH = paths.get("DOWNLOAD_PATH", cls.DOWNLOAD_PATH)
+        cls.CSV_PATH = paths.get("CSV_PATH", cls.CSV_PATH)
+        cls.PAPER_DOWNLOAD_FOLDER = paths.get("PAPER_FOLDER", cls.PAPER_DOWNLOAD_FOLDER)
+
+        cls.USE_SELENIUM = _to_bool(params.get("USE_SELENIUM", cls.USE_SELENIUM))
+        cls.DELAY_BETWEEN_PAPERS = int(params.get("DELAY_PAPER", cls.DELAY_BETWEEN_PAPERS))
+        cls.PAGE_LOAD_TIMEOUT = int(params.get("TIMEOUT", cls.PAGE_LOAD_TIMEOUT))
+        cls.normalize_paths()
 
 
 class ProcessManager:
@@ -1105,7 +1128,7 @@ class LoginManager:
 
     @staticmethod
     def _photo_path(filename: str) -> str:
-        return resource_path("photos", filename, base_dir=_BASE_DIR)
+        return resource_path("photos", filename, base_dir=_BUNDLE_DIR)
         
     def load_config(self):
         """加载登录配置"""
@@ -2119,12 +2142,10 @@ class PaperProcessor:
         print(f"{'='*50}")
 
 
-if __name__ == "__main__":
-    setup_script_logging(__file__)
-    # 确保关闭所有浏览器进程
+def main_entry():
+    Config.apply_runtime_config()
+    setup_script_logging(__file__, script_name="Paperdownload")
     ProcessManager.kill_browser_processes()
-    
-    # 创建并运行处理器
     processor = PaperProcessor()
     try:
         processor.run()
@@ -2133,5 +2154,8 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[错误] 程序运行出错: {str(e)}")
     finally:
-        # 确保关闭所有浏览器进程
         ProcessManager.kill_browser_processes()
+
+
+if __name__ == "__main__":
+    main_entry()

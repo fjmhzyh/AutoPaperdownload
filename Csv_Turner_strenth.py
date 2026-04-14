@@ -1,9 +1,10 @@
 import csv
 import os
 from log_utils import setup_script_logging
+from runtime_config import load_runtime_config
+from runtime_paths import data_path, ensure_runtime_layout
 
-# 项目根目录（自动获取）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ensure_runtime_layout()
 
 def filter_failed_dois(input_file, output_file):
     """
@@ -69,26 +70,19 @@ def filter_failed_dois(input_file, output_file):
     except Exception as e:
         print(f"处理过程中出现错误: {e}")
 
-# 使用示例
-if __name__ == "__main__":
-    setup_script_logging(__file__)
-    # 在这里指定输入和输出文件路径
-    input_file = os.path.join(_BASE_DIR, "PaperDoi_updated.csv")  # 替换为您的输入文件路径
-    output_file = os.path.join(_BASE_DIR, "PaperDoi_failed.csv")  # 替换为您的输出文件路径
-    
-    # 调用筛选函数
+def main_entry():
+    cfg = load_runtime_config()
+    paths = cfg.get("paths", {})
+    input_file = paths.get("TURNER_IN", data_path("PaperDoi_updated.csv"))
+    output_file = paths.get("TURNER_OUT", data_path("PaperDoi_failed.csv"))
+
+    setup_script_logging(__file__, script_name="Csv_Turner_strenth")
     result = filter_failed_dois(input_file, output_file)
-    
     if result:
         print("\n处理完成！")
-        # 显示处理结果预览
-        print("\n处理结果预览:")
-        for i, row in enumerate(result[:6]):  # 显示前6行
-            if i == 0:
-                print(f"标题行: {row}")
-            else:
-                print(f"第{i}行: {row}")
-        if len(result) > 6:
-            print(f"... (还有{len(result)-6}行)")
     else:
         print("\n处理失败！")
+
+
+if __name__ == "__main__":
+    main_entry()

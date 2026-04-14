@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "paths": {
+    "DOWNLOAD_PATH": "/Users/fjm/Code/AutoPaperdownload/html",
+    "PAPER_FOLDER": "/Users/fjm/Code/AutoPaperdownload/Paper",
+    "SI_FOLDER": "/Users/fjm/Code/AutoPaperdownload/SI",
+    "CSV_PATH": "/Users/fjm/Code/AutoPaperdownload/PaperDoi.csv",
+    "CLEAN_FOLDER": "/Users/fjm/Code/AutoPaperdownload/Paper",
+    "CLEAN_CSV_IN": "/Users/fjm/Code/AutoPaperdownload/PaperDoi.csv",
+    "CLEAN_CSV_OUT": "/Users/fjm/Code/AutoPaperdownload/PaperDoi_updated_clean.csv",
+    "TURNER_IN": "/Users/fjm/Code/AutoPaperdownload/PaperDoi_updated.csv",
+    "TURNER_OUT": "/Users/fjm/Code/AutoPaperdownload/PaperDoi_failed.csv",
+    "EXACT_IN": "/Users/fjm/Code/AutoPaperdownload/input.txt",
+    "EXACT_OUT": "/Users/fjm/Code/AutoPaperdownload/PaperDoi.csv"
+  },
+  "params": {
+    "USE_SELENIUM": false,
+    "DELAY_PAPER": 60,
+    "DELAY_SI": 5,
+    "TIMEOUT": 40,
+    "CLEAN_THRESHOLD": 47,
+    "SEARCH_QUERY": "(PCL) AND (Light curing)"
+  }
+}

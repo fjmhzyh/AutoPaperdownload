@@ -23,7 +23,12 @@ def get_default_edge_browser_path() -> Optional[str]:
 
 
 def resource_path(*parts: str, base_dir: Optional[str] = None) -> str:
-    root = base_dir if base_dir else os.path.dirname(os.path.abspath(__file__))
+    if base_dir:
+        root = base_dir
+    elif getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        root = str(getattr(sys, "_MEIPASS"))
+    else:
+        root = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(root, *parts)
 
 

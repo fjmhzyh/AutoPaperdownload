@@ -3,16 +3,17 @@ import os
 import re
 import logging
 from log_utils import setup_script_logging
+from runtime_config import load_runtime_config
+from runtime_paths import data_path, ensure_runtime_layout
 
-# 项目根目录（自动获取）
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ensure_runtime_layout()
 
 # ==============================================================================
 #  【配置参数】 - 由 config_manager.py 自动修改
 # ==============================================================================
-INPUT_FILE = os.path.join(_BASE_DIR, "input.txt")
-CSV_FILE = os.path.join(_BASE_DIR, "PaperDoi.csv")
-LOG_FILE = os.path.join(_BASE_DIR, "doi_extractor.log")
+INPUT_FILE = data_path("input.txt")
+CSV_FILE = data_path("PaperDoi.csv")
+LOG_FILE = data_path("log", "doi_extractor.log")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -57,6 +58,19 @@ def process():
     
     print(f"提取完成！找到: {len(dois)}，新增: {new_count}")
 
-if __name__ == "__main__":
-    setup_script_logging(__file__)
+def apply_runtime_config():
+    global INPUT_FILE, CSV_FILE
+    cfg = load_runtime_config()
+    paths = cfg.get("paths", {})
+    INPUT_FILE = paths.get("EXACT_IN", INPUT_FILE)
+    CSV_FILE = paths.get("EXACT_OUT", CSV_FILE)
+
+
+def main_entry():
+    apply_runtime_config()
+    setup_script_logging(__file__, script_name="doiexacter")
     process()
+
+
+if __name__ == "__main__":
+    main_entry()
