@@ -3,7 +3,7 @@ import subprocess
 import sys
 from typing import Dict, List
 
-from runtime_paths import app_path, get_bundle_dir, is_frozen_app
+from runtime_paths import app_path, get_app_dir, get_bundle_dir, is_frozen_app
 
 SCRIPT_KEY_TO_FILE: Dict[str, str] = {
     "getdoi": "getdoi_helper.py",
@@ -37,10 +37,46 @@ def resolve_worker_command(script_key: str) -> List[str]:
     if is_frozen_app():
         suffix = ".exe" if os.name == "nt" else ""
         worker_name = WORKER_KEY_TO_NAME[script_key] + suffix
-        worker_path = app_path(worker_name)
-        if not os.path.exists(worker_path):
-            raise FileNotFoundError(f"打包worker不存在: {worker_path}")
-        return [worker_path]
+        candidates: List[str] = []
+
+        # macOS: prefer onedir workers stored under Contents/Workers/<worker>/<worker>
+        if sys.platform == "darwin":
+            # Handles both launch contexts:
+            # 1) main app executable: .../Contents/MacOS/AutoPaperdownload
+            # 2) worker executable:   .../Contents/Workers/getdoi_worker/getdoi_worker
+            exe_dir = os.path.abspath(get_app_dir())
+            candidates.append(os.path.normpath(os.path.join(exe_dir, "..", "Workers", worker_name, worker_name)))
+            candidates.append(os.path.normpath(os.path.join(exe_dir, "..", worker_name, worker_name)))
+
+            # Robust fallback: derive "/Contents" from sys.executable directly.
+            marker = f"{os.sep}Contents{os.sep}"
+            exe_path = os.path.abspath(sys.executable)
+            if marker in exe_path:
+                prefix, _ = exe_path.split(marker, 1)
+                contents_dir = os.path.join(prefix, "Contents")
+                candidates.append(os.path.normpath(os.path.join(contents_dir, "Workers", worker_name, worker_name)))
+                candidates.append(os.path.normpath(os.path.join(contents_dir, "MacOS", worker_name)))
+
+        # Legacy layout / Windows: worker binary directly under app dir
+        candidates.append(app_path(worker_name))
+        candidates.append(app_path("Workers", worker_name, worker_name))
+
+        # de-duplicate while preserving order
+        deduped: List[str] = []
+        seen = set()
+        for path in candidates:
+            if path in seen:
+                continue
+            seen.add(path)
+            deduped.append(path)
+
+        for worker_path in deduped:
+            if os.path.exists(worker_path):
+                return [worker_path]
+
+        raise FileNotFoundError(
+            "打包worker不存在，已检查: " + ", ".join(deduped)
+        )
 
     script_path = os.path.join(get_bundle_dir(), SCRIPT_KEY_TO_FILE[script_key])
     return [sys.executable, script_path]

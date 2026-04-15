@@ -14,6 +14,7 @@ import requests
 import xml.etree.ElementTree as ET
 import platform
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from platform_compat import (
     get_browser_process_names,
     get_default_edge_browser_path,
@@ -408,44 +409,68 @@ def handle_rss_for_windows():
         handle_extracted_dois(api_dois)
 
 
+def _is_valid_rss_link(link: str) -> bool:
+    cleaned = (link or "").strip()
+    if not cleaned:
+        return False
+    if not re.match(r"^https?://", cleaned, re.IGNORECASE):
+        return False
+    return "pubmed.ncbi.nlm.nih.gov" in cleaned.lower()
+
+
+def _fallback_to_pubmed_api(reason: str) -> bool:
+    logger.warning(f"{reason}，尝试PubMed API兜底获取DOI")
+    api_dois = fetch_dois_via_pubmed_api(SEARCH_QUERY, retmax=15)
+    if api_dois is None:
+        raise RuntimeError(f"{reason}且API兜底失败")
+    handle_extracted_dois(api_dois)
+    return True
+
+
 def handle_rss_for_mac(system_info: Dict[str, str]) -> bool:
     """
     mac分支：在此处补充你自己的RSS获取逻辑
     返回True表示本轮RSS处理成功，返回False表示未处理
     """
-    pyautogui.press('tab', presses=5, interval=0.3) 
-    pyautogui.press('enter')  # 点enter打开订阅界面
-    pyautogui.press('tab',presses=2, interval=0.3)
-    pyautogui.press('enter') # 点击创建按钮
+    try:
+        pyautogui.press('tab', presses=5, interval=0.3)
+        pyautogui.press('enter')  # 点enter打开订阅界面
+        pyautogui.press('tab', presses=2, interval=0.3)
+        pyautogui.press('enter')  # 点击创建按钮
 
-    hotkey("copy")
-    time.sleep(3)
-    rss_link = pyperclip.paste()
-    logger.info(f"获取的RSS链接: {rss_link}")
+        pyperclip.copy("")
+        hotkey("copy")
+        time.sleep(3)
+        rss_link = (pyperclip.paste() or "").strip()
+        logger.info(f"获取的RSS链接: {rss_link}")
 
-    # 在新标签页打开RSS链接
-    logger.info("\n正在打开RSS订阅页面...")
-    if not open_url(rss_link, browser_path=BROWSER_PATH, new_window=True):
-        logger.error("打开RSS订阅页面失败")
-        raise RuntimeError("打开RSS订阅页面失败")
-    time.sleep(5)
+        if not _is_valid_rss_link(rss_link):
+            return _fallback_to_pubmed_api(f"mac RSS链接无效: {repr(rss_link)}")
 
-    # 获取HTML内容
-    logger.info("\n正在获取HTML内容...")
-    html_content = get_html_from_browser()
-    if html_content:
+        # 在新标签页打开RSS链接
+        logger.info("\n正在打开RSS订阅页面...")
+        if not open_url(rss_link, browser_path=BROWSER_PATH, new_window=True):
+            return _fallback_to_pubmed_api("打开RSS订阅页面失败")
+        time.sleep(5)
+
+        # 获取HTML内容
+        logger.info("\n正在获取HTML内容...")
+        html_content = get_html_from_browser()
+        if not html_content:
+            return _fallback_to_pubmed_api("获取RSS HTML内容失败")
+
         logger.info("成功获取HTML内容")
-
-        # 保存HTML文件
         saved_file = save_html_to_file(html_content)
-        if saved_file:
-            dois = extract_strict_dois(html_content)
-            handle_extracted_dois(dois)
-            return True
-    else:
-        logger.error("未能获取HTML内容")
-        raise RuntimeError("获取RSS HTML内容失败")
-        return False
+        if not saved_file:
+            return _fallback_to_pubmed_api("保存RSS HTML失败")
+
+        dois = extract_strict_dois(html_content)
+        handle_extracted_dois(dois)
+        return True
+    except Exception as exc:
+        if isinstance(exc, RuntimeError):
+            raise
+        return _fallback_to_pubmed_api(f"mac RSS自动化异常: {repr(exc)}")
 
 
 def main():
@@ -542,6 +567,7 @@ def main():
         logger.info("="*50 + "\n")
 
 def main_entry():
+    start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="getdoi_helper")
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)

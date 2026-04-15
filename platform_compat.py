@@ -70,6 +70,7 @@ def open_url(url: str, browser_path: Optional[str] = None, new_window: bool = Fa
 def _hotkey_mapping() -> Dict[str, Tuple[str, ...]]:
     if is_mac():
         return {
+            "new_tab": ("command", "t"),
             "focus_address_bar": ("command", "l"),
             "select_all": ("command", "a"),
             "copy": ("command", "c"),
@@ -79,6 +80,7 @@ def _hotkey_mapping() -> Dict[str, Tuple[str, ...]]:
             "dismiss_dialog": ("esc",),
         }
     return {
+        "new_tab": ("ctrl", "t"),
         "focus_address_bar": ("alt", "d"),
         "select_all": ("ctrl", "a"),
         "copy": ("ctrl", "c"),

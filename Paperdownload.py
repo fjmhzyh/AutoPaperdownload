@@ -17,6 +17,7 @@ from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 import random
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from platform_compat import (
     get_browser_process_names,
     get_default_edge_browser_path,
@@ -514,6 +515,64 @@ class WebScraper:
         """获取HTML内容"""
        
         return self._fetch_html_with_pyautogui(doi)
+
+    def resolve_final_url_with_pyautogui(self, doi: str) -> Optional[str]:
+        """通过PyAutoGUI打开DOI页面并复制地址栏URL作为final_url"""
+        print(f"[URL获取] 通过PyAutoGUI打开DOI页面: {doi}")
+        try:
+            if not open_url(
+                f"https://doi.org/{doi}",
+                browser_path=Config.EDGE_BROWSER_PATH,
+            ):
+                print("[URL获取错误] 浏览器启动失败")
+                return None
+
+            print(f"[URL获取] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
+            time.sleep(Config.PAGE_LOAD_TIMEOUT)
+
+            final_url = self._get_current_url()
+            if not final_url:
+                print("[URL获取错误] 地址栏URL为空")
+                return None
+
+            print(f"[URL解析成功] DOI={doi} -> {final_url}")
+            return final_url
+        except Exception as e:
+            print(f"[URL获取错误] PyAutoGUI获取final_url失败: {str(e)}")
+            return None
+
+    def _open_url_in_new_tab(self, url: str) -> bool:
+        """在当前浏览器中打开新标签页并导航到目标URL"""
+        try:
+            hotkey("new_tab")
+            time.sleep(1)
+            hotkey("focus_address_bar")
+            time.sleep(0.5)
+            hotkey("select_all")
+            pyautogui.press("backspace")
+            pyautogui.write(url, interval=0.01)
+            pyautogui.press("enter")
+            return True
+        except Exception as e:
+            print(f"[PyAutoGUI警告] 新标签页导航失败，回退系统打开: {str(e)}")
+            return open_url(url, browser_path=Config.EDGE_BROWSER_PATH)
+
+    def fetch_html_in_new_tab(self, url: str) -> Optional[str]:
+        """在新标签页打开URL，抓取源码后关闭当前标签页"""
+        print(f"[PyAutoGUI] 新标签页抓取HTML: {url}")
+        try:
+            if not self._open_url_in_new_tab(url):
+                print("[PyAutoGUI错误] 打开新标签页失败")
+                return None
+            print(f"[PyAutoGUI] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
+            time.sleep(Config.PAGE_LOAD_TIMEOUT)
+            html = self._get_page_source()
+            return html
+        except Exception as e:
+            print(f"[PyAutoGUI错误] 新标签页抓取HTML失败: {str(e)}")
+            return None
+        finally:
+            self._close_current_tab()
     
     
     def _fetch_html_with_pyautogui(self, doi: str) -> Tuple[Optional[str], Optional[str]]:
@@ -960,15 +1019,24 @@ class FileDownloader:
         return False, None
     
     def _open_url_in_browser(self, url: str):
-        """在浏览器中打开URL"""
+        """在浏览器新标签页打开URL"""
         try:
-            print("[浏览器] 启动浏览器...")
+            print("[浏览器] 新标签页打开URL...")
+            hotkey("new_tab")
+            time.sleep(1)
+            hotkey("focus_address_bar")
+            time.sleep(0.5)
+            hotkey("select_all")
+            pyautogui.press("backspace")
+            pyautogui.write(url, interval=0.01)
+            pyautogui.press("enter")
+            print(f"[浏览器] 已在新标签页打开URL: {url}")
+        except Exception as e:
+            print(f"[浏览器警告] 新标签页打开失败，回退系统打开: {str(e)}")
             if not open_url(url, browser_path=Config.EDGE_BROWSER_PATH):
                 print("[浏览器错误] 打开URL失败")
                 return
-            print(f"[浏览器] 已打开URL: {url}")
-        except Exception as e:
-            print(f"[浏览器错误] 打开URL失败: {str(e)}")
+            print(f"[浏览器] 已回退系统方式打开URL: {url}")
     
     def _cleanup_after_download(self):
         """下载完成后清理浏览器"""
@@ -1031,11 +1099,15 @@ class FileDownloader:
 
     def _snapshot_watch_dirs(self) -> Dict[str, Set[str]]:
         snapshots: Dict[str, Set[str]] = {}
-        for watch_dir in self._get_watch_dirs():
+        watch_dirs = self._get_watch_dirs()
+        print(f"[下载监听] 监听目录: {watch_dirs}")
+        for watch_dir in watch_dirs:
             try:
                 snapshots[watch_dir] = set(os.listdir(watch_dir)) if os.path.isdir(watch_dir) else set()
+                print(f"[下载监听] 初始快照: {watch_dir} 文件数={len(snapshots[watch_dir])}")
             except Exception:
                 snapshots[watch_dir] = set()
+                print(f"[下载监听警告] 无法读取目录: {watch_dir}")
         return snapshots
 
     def _move_download_to_target(self, source_path: str) -> str:
@@ -1045,6 +1117,7 @@ class FileDownloader:
         source_dir, source_name = os.path.split(source_abs)
 
         if os.path.abspath(source_dir) == target_dir:
+            print(f"[下载归集] 文件已在目标目录，无需移动: {source_abs}")
             return source_abs
 
         base, ext = os.path.splitext(source_name)
@@ -1055,11 +1128,32 @@ class FileDownloader:
             counter += 1
 
         try:
+            print(f"[下载归集] 开始移动文件: {source_abs} -> {target_path}")
             shutil.move(source_abs, target_path)
+            print(f"[下载归集] 移动成功: {target_path}")
             return target_path
         except Exception as e:
             print(f"[下载警告] 文件归集失败，保留原位置: {source_abs}，错误: {str(e)}")
             return source_abs
+
+    def _recent_candidates_summary(self, limit_per_dir: int = 3) -> str:
+        summaries: List[str] = []
+        for watch_dir in self._get_watch_dirs():
+            if not os.path.isdir(watch_dir):
+                summaries.append(f"{watch_dir}(目录不存在)")
+                continue
+            try:
+                files = []
+                for name in os.listdir(watch_dir):
+                    full_path = os.path.join(watch_dir, name)
+                    if os.path.isfile(full_path):
+                        files.append((name, os.path.getmtime(full_path)))
+                files.sort(key=lambda item: item[1], reverse=True)
+                recent = [name for name, _ in files[:limit_per_dir]]
+                summaries.append(f"{watch_dir} 最近文件={recent}")
+            except Exception as e:
+                summaries.append(f"{watch_dir}(读取失败:{e})")
+        return " | ".join(summaries)
 
     def _find_new_downloaded_file(
         self,
@@ -1072,6 +1166,8 @@ class FileDownloader:
         for watch_dir, current_files in current_snapshot.items():
             previous_files = initial_snapshot.get(watch_dir, set())
             new_files = current_files - previous_files
+            if new_files:
+                print(f"[下载检测] 目录={watch_dir} 新增候选={sorted(list(new_files))}")
 
             for filename in new_files:
                 ext = filename.split(".")[-1].lower() if "." in filename else ""
@@ -1084,8 +1180,10 @@ class FileDownloader:
                     candidates.append((source_path, os.path.getmtime(source_path)))
 
         if not candidates:
+            print("[下载检测] 未找到符合条件的新文件")
             return None
 
+        print(f"[下载检测] 匹配候选数量={len(candidates)}")
         source_path = max(candidates, key=lambda item: item[1])[0]
         target_path = self._move_download_to_target(source_path)
         filename = os.path.basename(target_path)
@@ -1099,6 +1197,8 @@ class FileDownloader:
         """获取新下载的文件名（支持多目录监听和自动归集）"""
         found = self._find_new_downloaded_file(initial_snapshot)
         if not found:
+            print(f"[下载未命中] DOI={doi} 未检测到新增下载文件")
+            print(f"[下载未命中] 最近文件摘要: {self._recent_candidates_summary()}")
             return None
 
         source_path, target_path, filename = found
@@ -1106,6 +1206,14 @@ class FileDownloader:
         target_dir = os.path.abspath(self.download_folder)
         if os.path.abspath(os.path.dirname(target_path)) == target_dir:
             print(f"[下载目录确认] 文件已统一归集到: {target_dir}")
+        if os.path.exists(target_path):
+            try:
+                size_bytes = os.path.getsize(target_path)
+                print(f"[下载落盘确认] DOI={doi} 路径={target_path} 大小={size_bytes} bytes")
+            except Exception as e:
+                print(f"[下载落盘确认警告] DOI={doi} 已找到文件但读取大小失败: {e}")
+        else:
+            print(f"[下载落盘确认警告] DOI={doi} 目标文件不存在: {target_path}")
         return filename
 
 
@@ -1893,21 +2001,21 @@ class PaperProcessor:
             print("[跳过] 无DOI，跳过处理")
             return False
 
-        # 阶段1: 获取最终URL并提取域名
+        # 阶段1: 通过PyAutoGUI获取最终URL并提取域名
         final_url = self._get_final_url(doi)
         if not final_url:
             return False
             
         domain = FileHandler.extract_main_domain(final_url)
         
-        # 阶段2: 执行登录检查
-        if self.login_manager.needs_login(domain):
+        # 阶段2: 在当前已打开页面执行登录检查（不关闭当前页）
+        if domain and self.login_manager.needs_login(domain):
             print(f"[登录] 检测到需要登录的域名: {domain}")
             self.login_manager.perform_login(domain)
             time.sleep(5)  # 等待登录完成
             
-        # 阶段3: 获取并保存HTML内容
-        html = self._get_html_content(doi)
+        # 阶段3: 新开标签页获取并保存HTML内容（抓取后仅关闭该标签页）
+        html = self._get_html_content(final_url)
         if not html:
             return False
             
@@ -1943,7 +2051,7 @@ class PaperProcessor:
     def _get_final_url(self, doi: str) -> Optional[str]:
         """获取论文的最终URL"""
         print(f"[URL获取] 正在获取DOI={doi}的最终URL")
-        return self._resolve_final_url_via_http(doi)
+        return self.web_scraper.resolve_final_url_with_pyautogui(doi)
 
     def _resolve_final_url_via_http(self, doi: str) -> Optional[str]:
         """通过HTTP重定向解析DOI最终URL"""
@@ -2034,9 +2142,9 @@ class PaperProcessor:
 
         return None
     
-    def _get_html_content(self, doi: str) -> Optional[str]:
-        """获取HTML内容"""
-        return self.web_scraper._fetch_html_with_pyautogui(doi)
+    def _get_html_content(self, final_url: str) -> Optional[str]:
+        """获取HTML内容（新标签页抓取，不影响当前会话页面）"""
+        return self.web_scraper.fetch_html_in_new_tab(final_url)
     
 
     def _process_new_branch(self, doi: str, domain: str, final_url: str, file_path: str) -> bool:
@@ -2065,6 +2173,9 @@ class PaperProcessor:
                 'DownloadURL': download_url
             })
             print(f"[流程成功] DOI={doi} 已写入CSV并标记Success")
+            if filename:
+                final_path = os.path.join(Config.PAPER_DOWNLOAD_FOLDER, filename)
+                print(f"[流程落盘] DOI={doi} Filename={filename} 路径={final_path} 存在={os.path.exists(final_path)}")
             return True
         else:
             self.csv_manager.update_row_by_doi(doi, {
@@ -2092,6 +2203,9 @@ class PaperProcessor:
                 'DownloadURL': paper_url
             })
             print(f"[流程成功] DOI={doi} 已写入CSV并标记Success")
+            if filename:
+                final_path = os.path.join(Config.PAPER_DOWNLOAD_FOLDER, filename)
+                print(f"[流程落盘] DOI={doi} Filename={filename} 路径={final_path} 存在={os.path.exists(final_path)}")
             return True
         else:
             self.csv_manager.update_row_by_doi(doi, {
@@ -2143,6 +2257,7 @@ class PaperProcessor:
 
 
 def main_entry():
+    start_parent_guard()
     Config.apply_runtime_config()
     setup_script_logging(__file__, script_name="Paperdownload")
     ProcessManager.kill_browser_processes()

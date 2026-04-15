@@ -6,6 +6,8 @@ Set-Location $root
 $version = python -c "from app_version import APP_VERSION; print(APP_VERSION)"
 $distDir = Join-Path $root "dist\\AutoPaperdownload"
 $pyiConfigDir = Join-Path $root ".pyinstaller-cache"
+$buildAssetsDir = Join-Path $root ".build_assets"
+$csvTemplatePath = Join-Path $buildAssetsDir "PaperDoi.csv"
 
 if (-not $env:PYINSTALLER_CONFIG_DIR) {
   $env:PYINSTALLER_CONFIG_DIR = $pyiConfigDir
@@ -13,6 +15,10 @@ if (-not $env:PYINSTALLER_CONFIG_DIR) {
 if (-not (Test-Path $env:PYINSTALLER_CONFIG_DIR)) {
   New-Item -ItemType Directory -Path $env:PYINSTALLER_CONFIG_DIR | Out-Null
 }
+if (-not (Test-Path $buildAssetsDir)) {
+  New-Item -ItemType Directory -Path $buildAssetsDir | Out-Null
+}
+"DOI,DownloadStatus,Filename,URL,DownloadURL,SIDownloadStatus,SIFilename,HTMLFilename" | Set-Content -Path $csvTemplatePath -Encoding utf8
 
 $commonHidden = @(
   '--hidden-import', 'pyautogui',
@@ -33,7 +39,7 @@ $dataArgs = @(
   '--add-data', 'Paperkeyword.json;.',
   '--add-data', 'SIkeyword.json;.',
   '--add-data', 'initial_tabs.json;.',
-  '--add-data', 'PaperDoi.csv;.',
+  '--add-data', "$csvTemplatePath;.",
   '--add-data', 'edgedriver;edgedriver'
 )
 

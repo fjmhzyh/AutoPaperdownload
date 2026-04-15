@@ -3,6 +3,7 @@ import os
 import re
 import logging
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from runtime_config import load_runtime_config
 from runtime_paths import data_path, ensure_runtime_layout
 
@@ -67,6 +68,7 @@ def apply_runtime_config():
 
 
 def main_entry():
+    start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="doiexacter")
     process()

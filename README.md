@@ -156,6 +156,26 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_win.ps1
 - GUI 通过 worker 可执行文件调度 `getdoi/paper/si` 及辅助脚本，不再依赖 `python xxx.py`。
 - 所有运行日志统一写入数据目录下 `log/`。
 
+### GitHub Actions 自动打包发布（Windows + macOS）
+
+仓库内已提供工作流：`.github/workflows/release.yml`
+
+- 触发方式：
+  - 推送标签：`v*`（如 `v1.0.0`）后自动构建并发布
+  - 手动触发：`Actions -> Build And Release -> Run workflow`
+- 构建内容：
+  - macOS：`release/mac/*.dmg`
+  - Windows：`release/win/*.exe`
+- 发布位置：
+  - GitHub 仓库 `Releases` 页面（自动上传安装包）
+
+快速发布示例：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ## 🌐 添加新网站支持
 
 通过 GUI 的"域名规则向导"三步完成，或手动编辑配置文件：

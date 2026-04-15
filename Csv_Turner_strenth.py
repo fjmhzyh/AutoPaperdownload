@@ -1,6 +1,7 @@
 import csv
 import os
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from runtime_config import load_runtime_config
 from runtime_paths import data_path, ensure_runtime_layout
 
@@ -71,6 +72,7 @@ def filter_failed_dois(input_file, output_file):
         print(f"处理过程中出现错误: {e}")
 
 def main_entry():
+    start_parent_guard()
     cfg = load_runtime_config()
     paths = cfg.get("paths", {})
     input_file = paths.get("TURNER_IN", data_path("PaperDoi_updated.csv"))

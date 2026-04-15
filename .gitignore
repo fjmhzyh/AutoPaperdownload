@@ -14,3 +14,4 @@ __pycache__/
 *.spec
 .pyinstaller-cache/
 .smoke-data/
+.build_assets/

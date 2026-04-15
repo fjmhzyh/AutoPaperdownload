@@ -41,7 +41,7 @@
         
 
       class="pb-page"
-         data-request-id="9ea03cfc502b6bf9-SJC"  
+         data-request-id="9ec12c9ad6ea06e8-SJC"  
 
 >
 
@@ -101,7 +101,7 @@
 
 
 
-    <script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+    <script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('consent', 'default', {
@@ -125,8 +125,8 @@
     <!-- OsanoScriptEnabled: true -->
     
         <link rel="preload" href="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" as="script">
-        <script src="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" nonce="9ea03cfc502b6bf9-SJC"></script>
-        <script nonce="9ea03cfc502b6bf9-SJC">
+        <script src="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
+        <script nonce="9ec12c9ad6ea06e8-SJC">
             window.Osano.cm.addEventListener("osano-cm-script-blocked", function (item) {
                 console.log("Script blocked: " + item);
             });
@@ -162,14 +162,14 @@
 
 
 
-<script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+<script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
     var adConfig = {"pubgrade-enabled":true};
 </script>
 
 
 
 
-    <script nonce="9ea03cfc502b6bf9-SJC">
+    <script nonce="9ec12c9ad6ea06e8-SJC">
         function isBrowserChrome() {
             return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
         }
@@ -296,7 +296,7 @@
                 
                     
                     <script id="adobeDigitalData" registrationCompleted="false">window.adobeDataLayer = window.adobeDataLayer || [];
-window.adobeDataLayer.push({"site":{"environment":"LIVE","hub":"pericles","locale":"zh-CN"},"user":{"login-status":"guest","admin-type":"non-admin","identities":[{"type":"SmartGroupUser","uuid":"b238ab85-6bb4-49e4-84ca-a0d9f3ee5a35"},{"type":"SmartGroupUser","uuid":"89490c0a-0b70-4215-8ec1-6aa771253899"},{"type":"ReferrerUser","uuid":"6401b279-b825-4f41-a389-04e29feb967f"},{"type":"RegionUser","uuid":"8939e02a-8b11-4272-9dd3-2bdf8f352ac9"},{"type":"RegionUser","uuid":"1e062694-1189-4932-91ab-dd78ca25a1ee"},{"type":"SmartGroupUser","uuid":"b7acda8c-ce18-451b-a68d-e14b72f9b5b8"},{"type":"BasicGroup","uuid":"91eaae86-e393-43e5-91f6-285936faede5"},{"type":"SmartGroupUser","uuid":"b2dbfe27-ecae-4bb6-bb0d-d75e5caa3762"},{"type":"ReferrerUser","uuid":"5a2c1d70-1255-4a45-95f3-a3aa3a2771fb"},{"type":"SmartGroupUser","uuid":"da88d808-3f7b-4bde-9210-10862b6d121b"},{"type":"BasicGroup","uuid":"2f6750d5-f13f-4356-939b-048ac1423e64"},{"type":"SmartGroupUser","uuid":"8c72a733-117a-4bc9-a682-13475f13e6a3"}]},"content":{"item":{"title":"Synthesis, Characterization, and Visible Light Curing Capacity of Polycaprolactone Acrylate","doi":"10.1155/2018/8719624","access":"open","type":"article","topics":[{"taxonomyUri":"embo-article-types","topicLabel":"Article","topicUri":"article"},{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"},{"taxonomyUri":"open-access","topicLabel":"Open Access Content","topicUri":"open-access-content"},{"taxonomyUri":"fundref-funders","topicLabel":"Ministry of Science and Technology, Taiwan","topicUri":"501100004663"}],"published-date":"2018-05-08","access-denial":"no","format-available":["Abstract","Cited by","First page image","Full text","PDF","References"],"format-viewed":"full text","auth-type":"license"},"group":{"doi":"10.1155/bmri.v2018.1","access":"open","type":"issue","volume":"2018","issue":"1","published-date":"2018-01-01","topics":[{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"}]},"series":{"title":"BioMed Research International","doi":"10.1155/2738","access":"open","type":"journal","code":"2738","eissn":"2314-6141","topics":[{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"},{"taxonomyUri":"gpt-sitename","topicLabel":"wly.gn.med.sci_000063","topicUri":"wly.gn.med.sci_000063"},{"taxonomyUri":"content-disclaimer","topicLabel":"Healthcare professionals","topicUri":"healthcare-professionals"},{"taxonomyUri":"hindawi-content-temp","topicLabel":"hindawi-content-label-temp","topicUri":"hindawi-content-tag-temp"},{"taxonomyUri":"gpt-publisherid","topicLabel":"21618997260","topicUri":"21618997260"},{"taxonomyUri":"madgex-jobs","topicLabel":"Display Madgex jobs","topicUri":"display-madgex-jobs"},{"taxonomyUri":"gpt-zonename","topicLabel":"biomed-research-international_BMRI","topicUri":"biomed-research-international_bmri"},{"taxonomyUri":"ad-feature-support","topicLabel":"Pubgrade Enabled","topicUri":"pubgrade-enabled"}]}},"page":{"brand":"wol","type":"article","primary-section":"journal","secondary-section":"article","tertiary-section":"full"}});</script>
+window.adobeDataLayer.push({"site":{"environment":"LIVE","hub":"pericles","locale":"zh-CN"},"user":{"login-status":"guest","admin-type":"non-admin","identities":[{"type":"SmartGroupUser","uuid":"b238ab85-6bb4-49e4-84ca-a0d9f3ee5a35"},{"type":"SmartGroupUser","uuid":"89490c0a-0b70-4215-8ec1-6aa771253899"},{"type":"RegionUser","uuid":"0f0c663e-bb67-40b2-acf6-040bb7f30cf4"},{"type":"ReferrerUser","uuid":"6401b279-b825-4f41-a389-04e29feb967f"},{"type":"RegionUser","uuid":"1e062694-1189-4932-91ab-dd78ca25a1ee"},{"type":"SmartGroupUser","uuid":"b7acda8c-ce18-451b-a68d-e14b72f9b5b8"},{"type":"BasicGroup","uuid":"91eaae86-e393-43e5-91f6-285936faede5"},{"type":"SmartGroupUser","uuid":"b2dbfe27-ecae-4bb6-bb0d-d75e5caa3762"},{"type":"ReferrerUser","uuid":"5a2c1d70-1255-4a45-95f3-a3aa3a2771fb"},{"type":"SmartGroupUser","uuid":"da88d808-3f7b-4bde-9210-10862b6d121b"},{"type":"BasicGroup","uuid":"2f6750d5-f13f-4356-939b-048ac1423e64"},{"type":"SmartGroupUser","uuid":"8c72a733-117a-4bc9-a682-13475f13e6a3"}]},"content":{"item":{"title":"Synthesis, Characterization, and Visible Light Curing Capacity of Polycaprolactone Acrylate","doi":"10.1155/2018/8719624","access":"open","type":"article","topics":[{"taxonomyUri":"embo-article-types","topicLabel":"Article","topicUri":"article"},{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"},{"taxonomyUri":"open-access","topicLabel":"Open Access Content","topicUri":"open-access-content"},{"taxonomyUri":"fundref-funders","topicLabel":"Ministry of Science and Technology, Taiwan","topicUri":"501100004663"}],"published-date":"2018-05-08","access-denial":"no","format-available":["Abstract","Cited by","First page image","Full text","PDF","References"],"format-viewed":"full text","auth-type":"license"},"group":{"doi":"10.1155/bmri.v2018.1","access":"open","type":"issue","volume":"2018","issue":"1","published-date":"2018-01-01","topics":[{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"}]},"series":{"title":"BioMed Research International","doi":"10.1155/2738","access":"open","type":"journal","code":"2738","eissn":"2314-6141","topics":[{"taxonomyUri":"global-subject-codes","topicLabel":"MEDICAL SCIENCE","topicUri":"md"},{"taxonomyUri":"global-subject-codes","topicLabel":"General \u0026 Introductory Medical Science","topicUri":"md00"},{"taxonomyUri":"gpt-sitename","topicLabel":"wly.gn.med.sci_000063","topicUri":"wly.gn.med.sci_000063"},{"taxonomyUri":"content-disclaimer","topicLabel":"Healthcare professionals","topicUri":"healthcare-professionals"},{"taxonomyUri":"hindawi-content-temp","topicLabel":"hindawi-content-label-temp","topicUri":"hindawi-content-tag-temp"},{"taxonomyUri":"gpt-publisherid","topicLabel":"21618997260","topicUri":"21618997260"},{"taxonomyUri":"madgex-jobs","topicLabel":"Display Madgex jobs","topicUri":"display-madgex-jobs"},{"taxonomyUri":"gpt-zonename","topicLabel":"biomed-research-international_BMRI","topicUri":"biomed-research-international_bmri"},{"taxonomyUri":"ad-feature-support","topicLabel":"Pubgrade Enabled","topicUri":"pubgrade-enabled"}]}},"page":{"brand":"wol","type":"article","primary-section":"journal","secondary-section":"article","tertiary-section":"full"}});</script>
                     
                 
             
@@ -389,8 +389,8 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
         
 
         
-            <meta property="og:image" content="https://onlinelibrary.wiley.com/cms/asset/95c6478a-b7a3-4069-af2a-25d4cbf1af7f/default_cover.jpg?trick=1775808240381"/>
-            <meta property="twitter:image" content="https://onlinelibrary.wiley.com/cms/asset/95c6478a-b7a3-4069-af2a-25d4cbf1af7f/default_cover.jpg?trick=1775808240381"/>
+            <meta property="og:image" content="https://onlinelibrary.wiley.com/cms/asset/95c6478a-b7a3-4069-af2a-25d4cbf1af7f/default_cover.jpg?trick=1776153599830"/>
+            <meta property="twitter:image" content="https://onlinelibrary.wiley.com/cms/asset/95c6478a-b7a3-4069-af2a-25d4cbf1af7f/default_cover.jpg?trick=1776153599830"/>
         
     
 
@@ -405,7 +405,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="citation_fulltext_world_readable" content=""/>
     <meta name="publication_doi" content="10.1155/2018/8719624"/>
-<meta name="event_group_key" content="3ebe4f9b-68e8-4afa-82c0-4fdb1052bc8c"/>
+<meta name="event_group_key" content="de22e83e-4317-4752-a47c-b38f767fc9a3"/>
 
 
 
@@ -498,15 +498,15 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 <!-- from https://jira.prod.atypon.com/browse/LIT-663245 -->
 
 
-<script async src="/pb-assets/catchpoint-1549680351760.js" nonce="9ea03cfc502b6bf9-SJC"></script>
+<script async src="/pb-assets/catchpoint-1549680351760.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
 <meta name="referrer" content="origin-when-cross-origin"/>
 <link rel="shortcut icon" href="/favicon.ico">
 
-<script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+<script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
     var utmParamsEnabled = true;
 </script>
 
-<script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+<script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
     var _hmt = _hmt || [];
     (function () {
         var hm = document.createElement("script");
@@ -518,7 +518,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 </script>
 
 <!-- Ads scripts -->
-<script nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">
     var googletag = googletag || {};
     googletag.cmd = googletag.cmd || [];
 	var isProgrammaticAdsEnabled = window.adConfig?.["programmatic-enabled"] ?? false;
@@ -546,7 +546,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 </script>
 
 <!-- DoubleVerify Unity Tag queue (PERICLES-19717) - START -->
-<script nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">
     window.onDvtagReady = function (callback, timeout = 750) {
         const opt = { callback, timeout, timestamp: new Date().getTime() }
         dvtag.cmd.push(function () { dvtag.queueAdRequest(opt) })
@@ -559,7 +559,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 </script>
 <!-- DoubleVerify Unity Tag queue - END --> 
 
-<script nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">
     googletag.cmd.push(function () {
         var sizes = {
             leaderboard: googletag.sizeMapping()
@@ -657,9 +657,9 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 
 <!--PERICLES-19058-->
 
-<script src="https://servedbydoceree.doceree.com/resources/p/doc_ad/84/281/dc.js" data-siteId="281" data-platId="1" data-pubId="84" nonce="9ea03cfc502b6bf9-SJC"></script>
+<script src="https://servedbydoceree.doceree.com/resources/p/doc_ad/84/281/dc.js" data-siteId="281" data-platId="1" data-pubId="84" nonce="9ec12c9ad6ea06e8-SJC"></script>
 
-<script nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">
     /* User Details */
     if (Osano && Osano.cm && Osano.cm.getConsent().MARKETING) {
         var $userConsent = "1";
@@ -676,7 +676,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
     }
 </script>
 
-<script nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">
     const params = new URLSearchParams();
 	params.set('site', 'wol');
 	params.set('page', window.adobeDataLayer?.[0]?.page?.type || 'n/a');
@@ -752,9 +752,9 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
 
     
 <!-- loading Javascript for using the persistence Service -->
-    <script src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~thiss-ds.js" nonce="9ea03cfc502b6bf9-SJC"></script>
+    <script src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~thiss-ds.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
 
-    <script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+    <script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
 
         function getParameter(parameterName) {
             let result = null,
@@ -855,7 +855,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
                         accept: {
                             text: "application/json"
                         },
-                        data: {doi: doi, entityid: entityId, entityTitle: entityTitle, eventGroupKey: '3ebe4f9b-68e8-4afa-82c0-4fdb1052bc8c'}
+                        data: {doi: doi, entityid: entityId, entityTitle: entityTitle, eventGroupKey: 'de22e83e-4317-4752-a47c-b38f767fc9a3'}
 
                     }).done(function (status) {
                         return resolve(status);
@@ -918,7 +918,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
         });
 
     </script>
-    <script nonce="9ea03cfc502b6bf9-SJC">
+    <script nonce="9ec12c9ad6ea06e8-SJC">
             (function() {
 
                 if (isBrowserChrome()) {
@@ -930,11 +930,11 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
                 }
             })();
         </script>
-    <script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+    <script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
         (function() {
             function riskifiedBeaconLoad() {
                 var store_domain = 'https://onlinelibrary.wiley.com';
-                var session_id = '8AC3C63E135677E8E4BA6A5E1A2CA825';
+                var session_id = 'C94A873D6CF5804C8C976EFEE6845E87';
                 var url = ('https:' == document.location.protocol ? 'https://' : 'http://')
                     + "beacon.riskified.com?shop=" + store_domain + "&sid=" + session_id;
                 var s = document.createElement('script');
@@ -1417,7 +1417,7 @@ var $GooglePublisherCategory = "/21618997260/wly.gn.med.sci_000063/biomed-resear
         <div class="pb-las">
             <aside role="complementary">
    <div id="advert-leaderboard" class="advert advert-leaderboard">
-      <script nonce="9ea03cfc502b6bf9-SJC">
+      <script nonce="9ec12c9ad6ea06e8-SJC">
          console.time('gpt ready');
          googletag.cmd.push( function () {
             console.timeEnd('gpt ready');
@@ -1470,8 +1470,8 @@ li.menu-item[data-menu-label="Recently Published"] {
 
 
         
-        <script src="/pb-assets/js/sticky-ad-1773669002823.js" nonce="9ea03cfc502b6bf9-SJC"></script>
-<script nonce="9ea03cfc502b6bf9-SJC">
+        <script src="/pb-assets/js/sticky-ad-1773669002823.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
+<script nonce="9ec12c9ad6ea06e8-SJC">
 StickyAds.init([
     {
         adSelector: '#advert-rail-1',
@@ -1523,7 +1523,7 @@ StickyAds.init([
         
         
 </div><div class="article-citation"><div class="citation">
-   <div class="pb-dropzone" data-pb-dropzone="publicaitonContent-series-title"><div id="journal-banner-text" class="journal-banner-text"><a href="/journal/2738" title="BioMed Research International homepage">BioMed Research International</a></div><a href="/toc/2738/2018" class="volume-issue">Volume 2018, Issue 1</a><span class="citation__eLocator"> 8719624</span><a href="/journal/2738" title="BioMed Research International homepage" class="citation--logo"><img id="journal-banner-image" test="test-value" alt="BioMed Research International" src="/pb-assets/journal-banners/2738-1715768496870.jpg" class="journal-banner-image"></a><script nonce="9ea03cfc502b6bf9-SJC">var image = new Image();
+   <div class="pb-dropzone" data-pb-dropzone="publicaitonContent-series-title"><div id="journal-banner-text" class="journal-banner-text"><a href="/journal/2738" title="BioMed Research International homepage">BioMed Research International</a></div><a href="/toc/2738/2018" class="volume-issue">Volume 2018, Issue 1</a><span class="citation__eLocator"> 8719624</span><a href="/journal/2738" title="BioMed Research International homepage" class="citation--logo"><img id="journal-banner-image" test="test-value" alt="BioMed Research International" src="/pb-assets/journal-banners/2738-1715768496870.jpg" class="journal-banner-image"></a><script nonce="9ec12c9ad6ea06e8-SJC">var image = new Image();
 
 image.onerror = function() {
   // if the image does not exist
@@ -1554,7 +1554,7 @@ image.src = "/pb-assets/journal-banners/2738-1715768496870.jpg";</script></div>
 
         
         <div class="publication-cover-extra"><ul class="rlist"><li><a href="/doi/toc/10.1155/2738.si.327508">Emerging Technologies and Methods for Musculoskeletal Tissue Repair and Regeneration</a></li></ul></div>
-</div><script nonce="9ea03cfc502b6bf9-SJC">document.addEventListener('DOMContentLoaded', function() {
+</div><script nonce="9ec12c9ad6ea06e8-SJC">document.addEventListener('DOMContentLoaded', function() {
     const extraDiv = document.querySelector('.virtual-publication-cover-extra');
     const articleCitations = document.querySelectorAll('.article-citation');
     articleCitations.forEach(function (articleCitation) {
@@ -1584,7 +1584,7 @@ image.src = "/pb-assets/journal-banners/2738-1715768496870.jpg";</script></div>
                <p class="author-type mb-1">Corresponding Author</p>
                <p class="author-name">Yuan-Min Lin</p>
                <ul class="rlist sm-account">
-                  <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#3a43575653547a4357145f5e4f144e4d"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="c6bfabaaafa886bfabe8a3a2b3e8b2b1">[email&#160;protected]</span></span></a></li>
+                  <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#186175747176586175367d7c6d366c6f"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="a4ddc9c8cdcae4ddc98ac1c0d18ad0d3">[email&#160;protected]</span></span></a></li>
                </ul>
                <ul class="rlist sm-account">
                   <li class="sm-account__item"><a target="_blank" class="sm-account__link" href="https://orcid.org/0000-0001-8697-978X"><i aria-hidden="true" class="icon-orcid"></i><span>orcid.org/0000-0001-8697-978X</span></a></li>
@@ -1611,7 +1611,7 @@ image.src = "/pb-assets/journal-banners/2738-1715768496870.jpg";</script></div>
                      <p class="author-type mb-1">Corresponding Author</p>
                      <p class="author-name">Yuan-Min Lin</p>
                      <ul class="rlist sm-account">
-                        <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#b9c0d4d5d0d7f9c0d497dcddcc97cdce"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="bdc4d0d1d4d3fdc4d093d8d9c893c9ca">[email&#160;protected]</span></span></a></li>
+                        <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#b8c1d5d4d1d6f8c1d596dddccd96cccf"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="afd6c2c3c6c1efd6c281cacbda81dbd8">[email&#160;protected]</span></span></a></li>
                      </ul>
                      <ul class="rlist sm-account">
                         <li class="sm-account__item"><a target="_blank" class="sm-account__link" href="https://orcid.org/0000-0001-8697-978X"><i aria-hidden="true" class="icon-orcid"></i><span>orcid.org/0000-0001-8697-978X</span></a></li>
@@ -2184,7 +2184,7 @@ QR Code</button></li></ul></div></div>
     
         <div class="pb-las">
             <div id="advert-rail-1" class="advert advert-rail">
-	<script nonce="9ea03cfc502b6bf9-SJC">
+	<script nonce="9ec12c9ad6ea06e8-SJC">
 		googletag.cmd.push(function () {
 			onDvtagReady(function () {
 				googletag.display( 'advert-rail-1' );
@@ -2226,7 +2226,7 @@ QR Code</button></li></ul></div></div>
 
 
         
-        <!-- Predefine variables with safe defaults to avoid errors in old Pug/Jade--><!-- Build subjects string manually to work on old Pug/Jade environment--><!-- Build regions string manually to work on old Pug/Jade environment--><wiley-jobs-widget journal-id="BMRI" subject="md00,md" region="SGP,APAC" limit="5"></wiley-jobs-widget><script nonce="9ea03cfc502b6bf9-SJC" async data-widget-id="jobs-widget" src="https://wiley-jobs-widget.madgexjb.com/public/widget.js"></script>
+        <!-- Predefine variables with safe defaults to avoid errors in old Pug/Jade--><!-- Build subjects string manually to work on old Pug/Jade environment--><!-- Build regions string manually to work on old Pug/Jade environment--><wiley-jobs-widget journal-id="BMRI" subject="md00,md" region="HKG,APAC" limit="5"></wiley-jobs-widget><script nonce="9ec12c9ad6ea06e8-SJC" async data-widget-id="jobs-widget" src="https://wiley-jobs-widget.madgexjb.com/public/widget.js"></script>
 
         </div>
     
@@ -2244,7 +2244,7 @@ QR Code</button></li></ul></div></div>
         <div class="pb-las">
             <aside>
 	<div id="advert-rail-2" class="advert advert-rail">
-		<script nonce="9ea03cfc502b6bf9-SJC">
+		<script nonce="9ec12c9ad6ea06e8-SJC">
 			googletag.cmd.push( function () {
 				onDvtagReady(function () {
 					googletag.display( 'advert-rail-2' );
@@ -2294,7 +2294,7 @@ Simply select your manager software from the list below and click on download.
             Use the dropdown list to choose how to format the bibliographic data you're harvesting. Several citation manager formats are available, including EndNote and BibTex. You can then copy the formatted citation (as displayed) or download it as file, to your device. If the RefWorks format is chosen, the 'Download' button will be replaced with an option to directly export to RefWorks
         </p>
 
-</div></div></div></div></div></div></div></div><script nonce="9ea03cfc502b6bf9-SJC">var articleRef = document.querySelector('.article__body:not(.show-references) .article__references');
+</div></div></div></div></div></div></div></div><script nonce="9ec12c9ad6ea06e8-SJC">var articleRef = document.querySelector('.article__body:not(.show-references) .article__references');
 if (articleRef) { articleRef.style.display = "none"; }
 
 </script><div id="figure-viewer" data-ux3-wrapper="figure-viewer" data-ux3-transformed-by="figureInit" data-ux3-role="parent" role="dialog" aria-label="Figure Viewer" class="figure-viewer"><div class="figure-viewer__reg__top clearfix"><div class="figure-viewer__top__right"><a href="#" data-ux3-role="controller" role="button" title="close" aria-label="close" class="figure-viewer__ctrl__close figure-viewer__cycleElement"><span class="icon-close_thin"><span class="sr-only">Close Figure Viewer</span></span></a></div><div class="figure-viewer__top__left"><button title="zoom out" aria-label="zoom out" class="figure-viewer__label__zoom icon-zoom-out zoom-out figure-viewer__cycleElement"></button><span tabindex="1" class="zoomSlider js__zoom-slider ui-slider"><input type="range" title="zoom control" aria-label="zoom control" class="zoom-range figure-viewer__cycleElement"/></span><button title="zoom in" aria-label="zoom in" class="figure-viewer__label__zoom icon-zoom-in zoom-in figure-viewer__cycleElement"></button></div></div><div class="direction-control hidden"><span direction="up" tabindex="0" role="button" aria-label="move figure up" class="move-up figure-viewer__cycleElement"></span><span direction="right" tabindex="0" role="button" aria-label="move figure right" class="move-right figure-viewer__cycleElement"></span><span direction="down" tabindex="0" role="button" aria-label="move figure down" class="move-down figure-viewer__cycleElement"></span><span direction="left" tabindex="0" role="button" aria-label="move figure left" class="move-left figure-viewer__cycleElement"></span></div><div class="figure-viewer__reg__center"><div class="figure-viewer__cent__left"><div class="figure-viewer__hold__fig"><figure class="holder"></figure></div><a href="#" role="button" title="previous figure" aria-label="previous" class="figure-viewer__ctrl__prev figure-viewer__cycleElement"><span class="icon-arrow_l"><span class="sr-only">Previous Figure</span></span></a><a href="#" role="button" title="next figure" aria-label="next" class="figure-viewer__ctrl__next figure-viewer__cycleElement"><span class="icon-arrow_r"><span class="sr-only">Next Figure</span></span></a><div class="figure-viewer__hold__list clearfix container"></div></div><div class="figure-viewer__cent__right"><div class="figure-viewer__title"><a title="Open/Close Caption" href="#" aria-expanded="false" aria-label="Caption" class="figure-viewer__ctrl__caption figure-viewer__cycleElement"><span class="icon-doublearrow"></span><span class="figure-viewer__caption__label">Caption</span></a><span class="figure-viewer__title__text hidden"></span></div><div tabindex="0" role="complementary" class="figure-viewer__hold__figcap figure-viewer__cycleElement hidden"></div></div></div></div>
@@ -3191,7 +3191,7 @@ if (articleRef) { articleRef.style.display = "none"; }
 
 
         
-        <script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+        <script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
     window.addEventListener('load', () => {
         document.querySelectorAll('.admin-bar-popup-menu ul li')?.forEach(function (li) {
             const anchor = li.querySelector('a');
@@ -3222,9 +3222,9 @@ if (articleRef) { articleRef.style.display = "none"; }
                 
             </div>
         </div>
-        <script src="/products/acropolis/pericles/releasedAssets/js/build.lazyload.bundle-aeda3538a44647046fe7.js" nonce="9ea03cfc502b6bf9-SJC"></script><script src="/products/acropolis/pericles/releasedAssets/js/main.bundle-e6c6a16c6b81fc3bf67e.js" nonce="9ea03cfc502b6bf9-SJC"></script><script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~product.js" nonce="9ea03cfc502b6bf9-SJC"></script>
+        <script src="/products/acropolis/pericles/releasedAssets/js/build.lazyload.bundle-aeda3538a44647046fe7.js" nonce="9ec12c9ad6ea06e8-SJC"></script><script src="/products/acropolis/pericles/releasedAssets/js/main.bundle-e6c6a16c6b81fc3bf67e.js" nonce="9ec12c9ad6ea06e8-SJC"></script><script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~product.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
 
-<script nonce="9ea03cfc502b6bf9-SJC">var _prum=[['id','59e8fecb3847311aab7b23c6'],['mark','firstbyte',(new Date()).getTime()]];(function(){var s=document.getElementsByTagName('script')[0],p=document.createElement('script');p.async='async';p.src='//rum-static.pingdom.net/prum.min.js';s.parentNode.insertBefore(p,s);})();</script><script type="text/javascript" nonce="9ea03cfc502b6bf9-SJC">
+<script nonce="9ec12c9ad6ea06e8-SJC">var _prum=[['id','59e8fecb3847311aab7b23c6'],['mark','firstbyte',(new Date()).getTime()]];(function(){var s=document.getElementsByTagName('script')[0],p=document.createElement('script');p.async='async';p.src='//rum-static.pingdom.net/prum.min.js';s.parentNode.insertBefore(p,s);})();</script><script type="text/javascript" nonce="9ec12c9ad6ea06e8-SJC">
         setTimeout(() => {
             let _bnw = window, _bna = atob("bG9jYXRpb24="), _bnb = atob("b3JpZ2lu"), _hn = _bnw[_bna][_bnb],
                 _bnt = btoa(_hn + new Array(5 - _hn.length % 4).join(" "));
@@ -3257,7 +3257,7 @@ if (articleRef) { articleRef.style.display = "none"; }
             
             
                 
-                    <script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~article-metrics-phase2.js" nonce="9ea03cfc502b6bf9-SJC"></script>
+                    <script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~article-metrics-phase2.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
                 
             
         
@@ -3271,11 +3271,11 @@ if (articleRef) { articleRef.style.display = "none"; }
 
 
 
-    <script nonce="9ea03cfc502b6bf9-SJC">
+    <script nonce="9ec12c9ad6ea06e8-SJC">
         fetch("https://wiley.met.vgwort.de/na/base64-dmd6bS42MDY1MC0xMC4xMTU1LTIwMTgtODcxOTYyNA==", {mode: 'no-cors', referrerPolicy: 'unsafe-url'});
     </script>
-<script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~full-text-analytics.js" nonce="9ea03cfc502b6bf9-SJC"></script>
-<script type="application/javascript" nonce="9ea03cfc502b6bf9-SJC">
+<script type="text/javascript" src="/wro/7eefe1ac3fa1fd1db62439ce305b72e4595ffa0f~full-text-analytics.js" nonce="9ec12c9ad6ea06e8-SJC"></script>
+<script type="application/javascript" nonce="9ec12c9ad6ea06e8-SJC">
         document.querySelectorAll('.pericles-input-class').forEach(function (element) {
             element.addEventListener('change', function () {
                 element.removeAttribute('aria-invalid')
@@ -3286,7 +3286,7 @@ if (articleRef) { articleRef.style.display = "none"; }
     
 
 
-            <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ea03cfc2e396be5',t:'MTc3NTgwODI0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9ea03cfc2e396be5","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.9.1","token":"f3dd54df2ac243bab2129483f57546d1"}' crossorigin="anonymous"></script>
+            <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ec12c9acc4106e8',t:'MTc3NjE1MzU5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9ec12c9acc4106e8","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.9.1","token":"f3dd54df2ac243bab2129483f57546d1"}' crossorigin="anonymous"></script>
 </body>
         
         

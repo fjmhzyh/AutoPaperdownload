@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import threading
+import traceback
 import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
@@ -55,6 +56,9 @@ class PaperAutomationConsole:
         self.root = root
         self.root.title(f"论文下载全流程自动化管理控制台 v{APP_VERSION}")
         self.root.geometry("1280x980")
+        self.is_closing = False
+        self.root.report_callback_exception = self._report_callback_exception
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close_request)
 
         self.SCRIPTS = {key: os.path.join(BUNDLE_DIR, filename) for key, filename in SCRIPT_NAMES.items()}
         self.json_files = {key: data_path(filename) for key, filename in JSON_FILENAMES.items()}
@@ -74,11 +78,16 @@ class PaperAutomationConsole:
         self.log_filter_target_var = tk.StringVar(value="当前脚本: 全部脚本")
         self.log_start_epoch = datetime.now().timestamp()
         self.pause_button_text = tk.StringVar(value="暂停滚动")
+        self.notify_mode = "both"  # both / system / gui
+        self.focus_handoff_script_keys = {"getdoi", "paper", "si"}
+        self.focus_handoff_count = 0
+        self.focus_auto_iconified = False
 
         # CSV 状态
         self.csv_sort_orders = {}
         self.csv_columns = []
         self.csv_data_rows = []
+        self.csv_column_widths = {}
         self.csv_path_var = tk.StringVar(value=CSV_DEFAULT_PATH)
         self.csv_row_count_var = tk.StringVar(value="总行数: 0")
         self.csv_refresh_time_var = tk.StringVar(value="最后刷新: -")
@@ -272,7 +281,13 @@ class PaperAutomationConsole:
         table_frame = ttk.Frame(self.csv_frame)
         table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-        self.csv_tree = ttk.Treeview(table_frame, show="headings")
+        csv_style = ttk.Style()
+        csv_style.configure("Csv.Treeview", rowheight=24, font=("Microsoft YaHei", 10))
+        csv_style.configure("Csv.Treeview.Heading", font=("Microsoft YaHei", 10, "bold"))
+
+        self.csv_tree = ttk.Treeview(table_frame, show="headings", style="Csv.Treeview")
+        self.csv_tree.tag_configure("odd", background="#ffffff")
+        self.csv_tree.tag_configure("even", background="#f6f9ff")
         csv_v_scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.csv_tree.yview)
         csv_h_scroll = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=self.csv_tree.xview)
         self.csv_tree.configure(yscrollcommand=csv_v_scroll.set, xscrollcommand=csv_h_scroll.set)
@@ -570,6 +585,7 @@ class PaperAutomationConsole:
         script_name = script_name_for_key(script_key)
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        env["AUTOPAPERDOWNLOAD_PARENT_PID"] = str(os.getpid())
 
         try:
             command = resolve_worker_command(script_key)
@@ -598,6 +614,9 @@ class PaperAutomationConsole:
             "status": "Running",
             "item_id": item_id,
             "ended_logged": False,
+            "notified_exit": False,
+            "needs_focus_handoff": self._script_requires_focus_handoff(script_key),
+            "focus_released": False,
         }
         self.current_script_name = script_name
         self.latest_script_var.set(f"最近启动脚本: {script_name}")
@@ -608,6 +627,8 @@ class PaperAutomationConsole:
         self.process_tree.focus(item_id)
         self.process_tree.see(item_id)
         self._append_log_line(f"PROC:{script_name}", f"[START] PID={process.pid}")
+        if self.process_registry[process.pid]["needs_focus_handoff"]:
+            self._handoff_gui_focus(script_name)
 
         thread = threading.Thread(target=self._read_process_output, args=(process, script_name), daemon=True)
         thread.start()
@@ -626,6 +647,8 @@ class PaperAutomationConsole:
                 pass
 
     def _drain_log_queue(self):
+        if self.is_closing:
+            return
         try:
             while True:
                 prefix, text = self.log_queue.get_nowait()
@@ -637,6 +660,8 @@ class PaperAutomationConsole:
         self.root.after(200, self._drain_log_queue)
 
     def _poll_log_files(self):
+        if self.is_closing:
+            return
         try:
             if not os.path.isdir(LOG_DIR):
                 self.root.after(1000, self._poll_log_files)
@@ -672,6 +697,8 @@ class PaperAutomationConsole:
         self.root.after(1000, self._poll_log_files)
 
     def _poll_process_status(self):
+        if self.is_closing:
+            return
         try:
             for pid, info in list(self.process_registry.items()):
                 process = info["process"]
@@ -686,9 +713,169 @@ class PaperAutomationConsole:
 
                 if info["status"] != status:
                     self._set_process_status(pid, status)
+                if code is not None and info.get("needs_focus_handoff") and not info.get("focus_released"):
+                    info["focus_released"] = True
+                    self._release_gui_focus_handoff(info.get("script", str(pid)))
+                if code is not None and not info.get("notified_exit"):
+                    self._notify_script_exit(info.get("script", str(pid)), code)
+                    info["notified_exit"] = True
         except tk.TclError:
             return
         self.root.after(1000, self._poll_process_status)
+
+    def _report_callback_exception(self, exc_type, exc_value, exc_traceback):
+        stack = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        try:
+            self._append_log_line("GUI", f"[异常] {exc_value}")
+            self._append_log_line("GUI", stack.rstrip())
+        except Exception:
+            pass
+
+    def _collect_active_pids(self):
+        active = []
+        for pid, info in self.process_registry.items():
+            if info.get("status") in ("Running", "Stopping") and info["process"].poll() is None:
+                active.append(pid)
+        return active
+
+    def _force_terminate_process_tree(self, pid: int):
+        info = self.process_registry.get(pid)
+        if not info:
+            return
+        process = info["process"]
+        script = info.get("script", str(pid))
+        try:
+            root_proc = psutil.Process(pid)
+            descendants = root_proc.children(recursive=True)
+            for child in descendants:
+                try:
+                    child.terminate()
+                except Exception:
+                    pass
+            try:
+                root_proc.terminate()
+            except Exception:
+                pass
+            wait_list = descendants + [root_proc]
+            _, alive = psutil.wait_procs(wait_list, timeout=2)
+            for proc in alive:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+            self._append_log_line("GUI", f"[EXIT] 已停止: {script} PID={pid}")
+        except Exception as exc:
+            try:
+                process.kill()
+                self._append_log_line("GUI", f"[EXIT] 已强制结束: {script} PID={pid}")
+            except Exception:
+                self._append_log_line("GUI", f"[EXIT] 停止失败: {script} PID={pid} | {exc}")
+
+    def _on_close_request(self):
+        if self.is_closing:
+            return
+
+        active_pids = self._collect_active_pids()
+        if active_pids:
+            yes = messagebox.askyesno(
+                "退出确认",
+                f"当前有 {len(active_pids)} 个脚本仍在运行，是否停止后退出？",
+            )
+            if not yes:
+                return
+
+        self.is_closing = True
+        for pid in active_pids:
+            self._force_terminate_process_tree(pid)
+
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+
+    def _script_requires_focus_handoff(self, script_key: str) -> bool:
+        return script_key in self.focus_handoff_script_keys
+
+    def _handoff_gui_focus(self, script_name: str):
+        self.focus_handoff_count += 1
+        if self.focus_handoff_count > 1:
+            self._append_log_line("GUI", f"[FOCUS] {script_name} 启动，保持GUI最小化以避免抢焦点")
+            return
+
+        try:
+            if self.root.state() == "iconic":
+                self.focus_auto_iconified = False
+                self._append_log_line("GUI", f"[FOCUS] {script_name} 启动，GUI已是最小化状态")
+                return
+        except Exception:
+            pass
+
+        try:
+            self.root.iconify()
+            self.focus_auto_iconified = True
+            self._append_log_line("GUI", f"[FOCUS] {script_name} 运行中，已自动最小化GUI避免干扰")
+        except Exception as exc:
+            self.focus_auto_iconified = False
+            self._append_log_line("GUI", f"[FOCUS] 自动最小化GUI失败: {exc}")
+
+    def _release_gui_focus_handoff(self, script_name: str):
+        if self.focus_handoff_count > 0:
+            self.focus_handoff_count -= 1
+        if self.focus_handoff_count > 0:
+            return
+        if not self.focus_auto_iconified:
+            self._append_log_line("GUI", f"[FOCUS] {script_name} 已结束")
+            return
+        try:
+            self.root.deiconify()
+            self.root.lift()
+            self.root.after(50, self.root.focus_force)
+            self._append_log_line("GUI", f"[FOCUS] {script_name} 已结束，GUI已恢复显示")
+        except Exception as exc:
+            self._append_log_line("GUI", f"[FOCUS] 恢复GUI显示失败: {exc}")
+        finally:
+            self.focus_auto_iconified = False
+
+    def _send_system_notification(self, title: str, message: str):
+        if self.notify_mode not in ("both", "system"):
+            return
+        try:
+            if sys.platform == "darwin":
+                safe_title = title.replace('"', '\\"')
+                safe_message = message.replace('"', '\\"')
+                applescript = f'display notification "{safe_message}" with title "{safe_title}"'
+                subprocess.run(
+                    ["osascript", "-e", applescript],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+        except Exception as exc:
+            self._append_log_line("GUI", f"[NOTIFY] 系统通知发送失败: {exc}")
+
+    def _notify_script_exit(self, script_name: str, exit_code: int):
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if exit_code == 0:
+            title = "脚本执行完成"
+            message = f"{script_name} 已完成（{now}）"
+            self._append_log_line("GUI", f"[NOTIFY] 脚本完成: {script_name} Exit={exit_code}")
+            self._send_system_notification(title, message)
+            if self.notify_mode in ("both", "gui"):
+                try:
+                    messagebox.showinfo(title, message)
+                except Exception:
+                    pass
+            return
+
+        title = "脚本执行失败"
+        message = f"{script_name} 异常结束，退出码={exit_code}（{now}）"
+        self._append_log_line("GUI", f"[NOTIFY] 脚本失败: {script_name} Exit={exit_code}")
+        self._send_system_notification(title, message)
+        if self.notify_mode in ("both", "gui"):
+            try:
+                messagebox.showwarning(title, message)
+            except Exception:
+                pass
 
     def _set_process_status(self, pid: int, status: str):
         info = self.process_registry.get(pid)
@@ -898,6 +1085,16 @@ class PaperAutomationConsole:
         self.csv_path_var.set(path)
         self.csv_error_var.set("")
 
+        previous_columns = list(self.csv_tree["columns"])
+        if previous_columns:
+            for col in previous_columns:
+                try:
+                    width = int(self.csv_tree.column(col, "width"))
+                    if width > 0:
+                        self.csv_column_widths[col] = width
+                except Exception:
+                    continue
+
         self.csv_tree.delete(*self.csv_tree.get_children())
         self.csv_tree["columns"] = []
         self.csv_columns = []
@@ -925,9 +1122,13 @@ class PaperAutomationConsole:
             self.csv_sort_orders = {}
 
             self.csv_tree["columns"] = self.csv_columns
-            for col in self.csv_columns:
+            for index, col in enumerate(self.csv_columns):
                 self.csv_tree.heading(col, text=col, command=lambda c=col: self._sort_csv_by_column(c))
-                self.csv_tree.column(col, width=140, anchor=tk.W)
+                width = self.csv_column_widths.get(col)
+                if not width:
+                    width = self._estimate_csv_column_width(col, index, self.csv_data_rows)
+                    self.csv_column_widths[col] = width
+                self.csv_tree.column(col, width=width, minwidth=90, stretch=True, anchor=tk.W)
 
             self._render_csv_rows()
             self.csv_row_count_var.set(f"总行数: {len(self.csv_data_rows)}")
@@ -944,8 +1145,23 @@ class PaperAutomationConsole:
 
     def _render_csv_rows(self):
         self.csv_tree.delete(*self.csv_tree.get_children())
-        for row in self.csv_data_rows:
-            self.csv_tree.insert("", tk.END, values=row)
+        for idx, row in enumerate(self.csv_data_rows):
+            tag = "even" if idx % 2 == 0 else "odd"
+            self.csv_tree.insert("", tk.END, values=row, tags=(tag,))
+
+    def _estimate_csv_column_width(self, col_name: str, col_index: int, rows):
+        sample_rows = rows[:80] if rows else []
+        max_len = len(str(col_name))
+        for row in sample_rows:
+            if col_index < len(row):
+                max_len = max(max_len, len(str(row[col_index] or "")))
+
+        lower_name = str(col_name).lower()
+        is_path_like = any(k in lower_name for k in ("url", "file", "path", "filename", "html"))
+        min_width = 180 if is_path_like else 110
+        max_width = 700 if is_path_like else 320
+        estimated = (max_len + 2) * 8
+        return max(min_width, min(max_width, int(estimated)))
 
     def _sort_csv_by_column(self, col_name: str):
         if not self.csv_columns or col_name not in self.csv_columns:
@@ -994,6 +1210,8 @@ class PaperAutomationConsole:
             self.folder_status_vars[folder_name].set(f"读取失败: {exc}")
 
     def _auto_refresh_folders(self):
+        if self.is_closing:
+            return
         try:
             if self.folder_auto_refresh.get():
                 self._refresh_all_folders()

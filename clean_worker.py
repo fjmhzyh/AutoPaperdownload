@@ -1,10 +1,12 @@
 from cleaner import advanced_path_matching_process
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from runtime_config import load_runtime_config
 from runtime_paths import data_path, ensure_runtime_layout
 
 
 def main_entry():
+    start_parent_guard()
     ensure_runtime_layout()
     cfg = load_runtime_config()
     paths = cfg.get("paths", {})

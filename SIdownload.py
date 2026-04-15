@@ -6,7 +6,10 @@ import pyautogui
 from datetime import datetime
 import json
 import random
+import shutil
+from typing import Dict, List, Optional, Set, Tuple
 from log_utils import setup_script_logging
+from parent_guard import start_parent_guard
 from platform_compat import (
     get_default_edge_browser_path,
     hotkey,
@@ -15,10 +18,26 @@ from platform_compat import (
     resource_path,
 )
 from runtime_config import load_runtime_config
-from runtime_paths import bundle_path, data_path, ensure_runtime_layout, get_bundle_dir
+from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir
 
 ensure_runtime_layout()
 _BUNDLE_DIR = get_bundle_dir()
+
+
+def _default_watch_dirs() -> List[str]:
+    dirs: List[str] = [os.path.expanduser("~/Downloads")]
+    userprofile = os.environ.get("USERPROFILE", "")
+    if userprofile:
+        dirs.append(os.path.join(userprofile, "Downloads"))
+    onedrive = os.environ.get("OneDrive", "")
+    if onedrive:
+        dirs.append(os.path.join(onedrive, "Downloads"))
+    normalized: List[str] = []
+    for item in dirs:
+        abs_dir = os.path.abspath(os.path.expanduser(item))
+        if abs_dir not in normalized:
+            normalized.append(abs_dir)
+    return normalized
 
 # 全局配置
 CONFIG = {
@@ -34,6 +53,7 @@ CONFIG = {
     "PAGE_LOAD_TIMEOUT": 40,  # 页面加载超时时间(秒)
     "DOCUMENT_EXTENSIONS": ["pdf", "docx", "doc", "zip"],  # 支持的文档扩展名
     "SI_DOWNLOAD_FOLDER": data_path("SI"),  # SI下载文件夹
+    "EXTRA_WATCH_DIRS": _default_watch_dirs(),  # 额外监听下载目录
     "RANDOM_DELAY_RANGE": (0.8, 1.2),  # 延迟随机倍数  
     "MOUSE_MOVEMENT_STEPS": (5, 10),   # 鼠标移动步数  
     "HUMAN_BEHAVIOR_PROB": 0.3,        # 人性化行为概率
@@ -52,6 +72,10 @@ def apply_runtime_config():
     CONFIG["DOWNLOAD_PATH"] = paths.get("DOWNLOAD_PATH", CONFIG["DOWNLOAD_PATH"])
     CONFIG["CSV_PATH"] = paths.get("CSV_PATH", CONFIG["CSV_PATH"])
     CONFIG["SI_DOWNLOAD_FOLDER"] = paths.get("SI_FOLDER", CONFIG["SI_DOWNLOAD_FOLDER"])
+    CONFIG["DOWNLOAD_PATH"] = os.path.abspath(os.path.expanduser(CONFIG["DOWNLOAD_PATH"]))
+    CONFIG["CSV_PATH"] = os.path.abspath(os.path.expanduser(CONFIG["CSV_PATH"]))
+    CONFIG["SI_DOWNLOAD_FOLDER"] = os.path.abspath(os.path.expanduser(CONFIG["SI_DOWNLOAD_FOLDER"]))
+    CONFIG["EXTRA_WATCH_DIRS"] = list({os.path.abspath(os.path.expanduser(p)) for p in CONFIG["EXTRA_WATCH_DIRS"]})
     CONFIG["USE_SELENIUM"] = _to_bool(params.get("USE_SELENIUM", CONFIG["USE_SELENIUM"]))
     CONFIG["DELAY_BETWEEN_PAPERS"] = int(params.get("DELAY_SI", CONFIG["DELAY_BETWEEN_PAPERS"]))
     CONFIG["PAGE_LOAD_TIMEOUT"] = int(params.get("TIMEOUT", CONFIG["PAGE_LOAD_TIMEOUT"]))
@@ -66,6 +90,7 @@ class PaperProcessor:
         self.csv_fieldnames = []
         self.last_extract_by_eid = False  # 新增实例变量跟踪eid模式
         self._last_is_full_supp = False  # 跟踪full#supplementary-material模式
+        self.last_si_file_path = None
         
         print(f"\n{'='*50}")
         print(f"论文处理程序启动 - {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -369,6 +394,156 @@ class PaperProcessor:
             y = current_y + (target_y - current_y) * (i + 1) / steps  
             pyautogui.moveTo(x, y, duration=random.uniform(0.1, 0.3))  
             time.sleep(random.uniform(0.05, 0.15))  
+
+    def _get_watch_dirs(self) -> List[str]:
+        dirs = [CONFIG["SI_DOWNLOAD_FOLDER"]] + list(CONFIG["EXTRA_WATCH_DIRS"])
+        normalized: List[str] = []
+        for d in dirs:
+            abs_dir = os.path.abspath(d)
+            if abs_dir not in normalized:
+                normalized.append(abs_dir)
+        return normalized
+
+    def _snapshot_watch_dirs(self) -> Dict[str, Set[str]]:
+        snapshots: Dict[str, Set[str]] = {}
+        watch_dirs = self._get_watch_dirs()
+        print(f"[下载监听] 监听目录: {watch_dirs}")
+        for watch_dir in watch_dirs:
+            try:
+                snapshots[watch_dir] = set(os.listdir(watch_dir)) if os.path.isdir(watch_dir) else set()
+                print(f"[下载监听] 初始快照: {watch_dir} 文件数={len(snapshots[watch_dir])}")
+            except Exception:
+                snapshots[watch_dir] = set()
+                print(f"[下载监听警告] 无法读取目录: {watch_dir}")
+        return snapshots
+
+    def _move_download_to_target(self, source_path: str) -> str:
+        os.makedirs(CONFIG["SI_DOWNLOAD_FOLDER"], exist_ok=True)
+        target_dir = os.path.abspath(CONFIG["SI_DOWNLOAD_FOLDER"])
+        source_abs = os.path.abspath(source_path)
+        source_dir, source_name = os.path.split(source_abs)
+
+        if os.path.abspath(source_dir) == target_dir:
+            print(f"[下载归集] 文件已在目标目录，无需移动: {source_abs}")
+            return source_abs
+
+        base, ext = os.path.splitext(source_name)
+        target_path = os.path.join(target_dir, source_name)
+        counter = 1
+        while os.path.exists(target_path):
+            target_path = os.path.join(target_dir, f"{base}_{counter}{ext}")
+            counter += 1
+
+        try:
+            print(f"[下载归集] 开始移动文件: {source_abs} -> {target_path}")
+            shutil.move(source_abs, target_path)
+            print(f"[下载归集] 移动成功: {target_path}")
+            return target_path
+        except Exception as e:
+            print(f"[下载警告] 文件归集失败，保留原位置: {source_abs}，错误: {str(e)}")
+            return source_abs
+
+    def _recent_candidates_summary(self, limit_per_dir: int = 3) -> str:
+        summaries: List[str] = []
+        for watch_dir in self._get_watch_dirs():
+            if not os.path.isdir(watch_dir):
+                summaries.append(f"{watch_dir}(目录不存在)")
+                continue
+            try:
+                files = []
+                for name in os.listdir(watch_dir):
+                    full_path = os.path.join(watch_dir, name)
+                    if os.path.isfile(full_path):
+                        files.append((name, os.path.getmtime(full_path)))
+                files.sort(key=lambda item: item[1], reverse=True)
+                recent = [name for name, _ in files[:limit_per_dir]]
+                summaries.append(f"{watch_dir} 最近文件={recent}")
+            except Exception as e:
+                summaries.append(f"{watch_dir}(读取失败:{e})")
+        return " | ".join(summaries)
+
+    def _find_new_downloaded_file(self, initial_snapshot: Dict[str, Set[str]]) -> Optional[Tuple[str, str, str]]:
+        current_snapshot = self._snapshot_watch_dirs()
+        temp_extensions = {"crdownload", "part", "tmp", "download"}
+        candidates: List[Tuple[str, float]] = []
+
+        for watch_dir, current_files in current_snapshot.items():
+            previous_files = initial_snapshot.get(watch_dir, set())
+            new_files = current_files - previous_files
+            if new_files:
+                print(f"[下载检测] 目录={watch_dir} 新增候选={sorted(list(new_files))}")
+
+            for filename in new_files:
+                ext = filename.split(".")[-1].lower() if "." in filename else ""
+                if ext in temp_extensions:
+                    continue
+                if ext not in CONFIG["DOCUMENT_EXTENSIONS"]:
+                    continue
+                source_path = os.path.join(watch_dir, filename)
+                if os.path.isfile(source_path):
+                    candidates.append((source_path, os.path.getmtime(source_path)))
+
+        if not candidates:
+            print("[下载检测] 未找到符合条件的新文件")
+            return None
+
+        print(f"[下载检测] 匹配候选数量={len(candidates)}")
+        source_path = max(candidates, key=lambda item: item[1])[0]
+        target_path = self._move_download_to_target(source_path)
+        filename = os.path.basename(target_path)
+        return source_path, target_path, filename
+
+    def _rename_by_doi(self, target_path: str, doi: str) -> Tuple[str, str]:
+        safe_doi = self.normalize_filename(doi.replace("/", "_"))
+        file_ext = os.path.splitext(target_path)[1]
+        target_dir = os.path.dirname(target_path)
+        expected_name = f"{safe_doi}{file_ext}"
+        expected_path = os.path.join(target_dir, expected_name)
+
+        if os.path.abspath(target_path) == os.path.abspath(expected_path):
+            return expected_path, expected_name
+
+        base, ext = os.path.splitext(expected_name)
+        candidate_path = expected_path
+        counter = 1
+        while os.path.exists(candidate_path):
+            candidate_path = os.path.join(target_dir, f"{base}_{counter}{ext}")
+            counter += 1
+
+        try:
+            print(f"[下载归集] 按DOI重命名: {target_path} -> {candidate_path}")
+            os.rename(target_path, candidate_path)
+            return candidate_path, os.path.basename(candidate_path)
+        except Exception as e:
+            print(f"[下载警告] DOI重命名失败，保留原文件名: {target_path}，错误: {str(e)}")
+            return target_path, os.path.basename(target_path)
+
+    def _get_downloaded_filename(self, initial_snapshot: Dict[str, Set[str]], doi: str) -> Optional[str]:
+        found = self._find_new_downloaded_file(initial_snapshot)
+        if not found:
+            self.last_si_file_path = None
+            print(f"[下载未命中] DOI={doi} 未检测到新增下载文件")
+            print(f"[下载未命中] 最近文件摘要: {self._recent_candidates_summary()}")
+            return None
+
+        source_path, target_path, filename = found
+        final_path, final_name = self._rename_by_doi(target_path, doi)
+        print(f"[下载成功] DOI={doi} 文件={final_name} 来源={source_path} 目标={final_path}")
+
+        target_dir = os.path.abspath(CONFIG["SI_DOWNLOAD_FOLDER"])
+        if os.path.abspath(os.path.dirname(final_path)) == target_dir:
+            print(f"[下载目录确认] 文件已统一归集到: {target_dir}")
+        if os.path.exists(final_path):
+            try:
+                size_bytes = os.path.getsize(final_path)
+                print(f"[下载落盘确认] DOI={doi} 路径={final_path} 大小={size_bytes} bytes")
+            except Exception as e:
+                print(f"[下载落盘确认警告] DOI={doi} 已找到文件但读取大小失败: {e}")
+        else:
+            print(f"[下载落盘确认警告] DOI={doi} 目标文件不存在: {final_path}")
+        self.last_si_file_path = final_path
+        return final_name
+
     def download_and_rename_file(self, doi, url, auto_download=False, wait_time=40):
         """下载并重命名文件"""
         if not doi or not url:
@@ -376,9 +551,7 @@ class PaperProcessor:
             return None
             
         print(f"[文件下载] 正在处理DOI: {doi}")
-        
-        # 获取下载文件夹中的初始文件列表
-        initial_files = set(os.listdir(CONFIG["SI_DOWNLOAD_FOLDER"]))
+        initial_snapshot = self._snapshot_watch_dirs()
 
         try:
             if not open_url(url, browser_path=CONFIG["EDGE_BROWSER_PATH"]):
@@ -408,33 +581,7 @@ class PaperProcessor:
                 hotkey("close_tab")
 
             time.sleep(wait_time)
-
-            # 获取下载后的文件列表
-            final_files = set(os.listdir(CONFIG["SI_DOWNLOAD_FOLDER"]))
-            new_files = final_files - initial_files
-            
-            if not new_files:
-                print("[警告] 未检测到新下载的文件")
-                return None
-            
-            # 获取最新下载的文件
-            downloaded_file = max(new_files, key=lambda f: os.path.getmtime(os.path.join(CONFIG["SI_DOWNLOAD_FOLDER"], f)))
-            original_path = os.path.join(CONFIG["SI_DOWNLOAD_FOLDER"], downloaded_file)
-            
-            # 根据DOI生成新文件名
-            safe_doi = self.normalize_filename(doi.replace('/', '_'))
-            file_ext = os.path.splitext(downloaded_file)[1]
-            new_filename = f"{safe_doi}{file_ext}"
-            new_path = os.path.join(CONFIG["SI_DOWNLOAD_FOLDER"], new_filename)
-            
-            # 重命名文件
-            try:
-                os.rename(original_path, new_path)
-                print(f"[文件下载] 文件已重命名为: {new_filename}")
-                return new_filename
-            except Exception as e:
-                print(f"[错误] 文件重命名失败: {str(e)}")
-                return None
+            return self._get_downloaded_filename(initial_snapshot, doi)
         except Exception as e:
             print(f"[错误] 下载操作失败: {str(e)}")
             return None
@@ -445,8 +592,7 @@ class PaperProcessor:
             print("[错误] 缺少DOI")
             return None
             
-        folder = CONFIG["SI_DOWNLOAD_FOLDER"]
-        before = set(os.listdir(folder))
+        before_snapshot = self._snapshot_watch_dirs()
         print(f"[自动操作] 正在查找并点击下载按钮: {button_image_path}")
         start_time = time.time()
         found = False
@@ -477,36 +623,16 @@ class PaperProcessor:
         # 检测新下载文件夹并重命名
         if found:
             print("[自动操作] 检测新下载文件夹并重命名...")
-            return self.rename_latest_downloaded_file_after(before, doi, wait_time=wait_time)
+            return self.rename_latest_downloaded_file_after(before_snapshot, doi, wait_time=wait_time)
         return None
 
-    def rename_latest_downloaded_file_after(self, before, doi, wait_time=50):
+    def rename_latest_downloaded_file_after(self, before_snapshot, doi, wait_time=50):
         """重命名最新下载的文件"""
         if not doi:
             return None
             
-        folder = CONFIG["SI_DOWNLOAD_FOLDER"]
         time.sleep(wait_time)
-        after = set(os.listdir(folder))
-        new_files = after - before
-        
-        if not new_files:
-            print("[警告] 未检测到新下载的文件")
-            return None
-            
-        try:
-            downloaded_file = max(new_files, key=lambda f: os.path.getmtime(os.path.join(folder, f)))
-            original_path = os.path.join(folder, downloaded_file)
-            safe_doi = self.normalize_filename(doi.replace('/', '_'))
-            file_ext = os.path.splitext(downloaded_file)[1]
-            new_filename = f"{safe_doi}{file_ext}"
-            new_path = os.path.join(folder, new_filename)
-            os.rename(original_path, new_path)
-            print(f"[文件下载] 文件已重命名为: {new_filename}")
-            return new_filename
-        except Exception as e:
-            print(f"[错误] 文件重命名失败: {str(e)}")
-            return None
+        return self._get_downloaded_filename(before_snapshot, doi)
 
     def open_in_edge(self, url, doi, need_download):
         """用浏览器打开URL并下载文件（Windows优先Edge）"""
@@ -628,6 +754,8 @@ class PaperProcessor:
             self.update_csv_column(doi, 'SIDownloadStatus', 'SUCCESS')
             # 更新SIFilename为下载的文件名
             self.update_csv_column(doi, 'SIFilename', result_filename)
+            final_path = self.last_si_file_path or os.path.join(CONFIG["SI_DOWNLOAD_FOLDER"], result_filename)
+            print(f"[流程落盘] DOI={doi} SIFilename={result_filename} 路径={final_path} 存在={os.path.exists(final_path)}")
             return True
         else:
             # eid模式下载失败时标记NOSI
@@ -665,6 +793,7 @@ class PaperProcessor:
         print(f"{'='*50}")
 
 def main_entry():
+    start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="SIdownload")
     processor = PaperProcessor()

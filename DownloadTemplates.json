@@ -12,6 +12,7 @@
   "pubs.rsc.org": "https://pubs.rsc.org/",
   "journals.sagepub.com":"https://journals.sagepub.com/doi/pdf/{doi}?download=true",
   "onlinelibrary.wiley.com":"https://onlinelibrary.wiley.com/doi/pdfdirect/{doi}?download=true",
+  "www.hindawi.com":"https://onlinelibrary.wiley.com/doi/pdfdirect/{doi}?download=true",
   "www.science.org":"https://www.science.org/doi/pdf/{doi}?download=true",
   "www.jospt.org":"https://www.jospt.org/doi/pdf/{doi}?download=true",
   "www.thieme-connect.de":"https://www.thieme-connect.de/products/ejournals/pdf/{doi}.pdf?articleLanguage=en",
