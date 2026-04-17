@@ -176,6 +176,18 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+### macOS 内部分发注意（未上架场景）
+
+- 当前安装包为内部使用，不走 App Store。
+- 构建脚本会在打包末尾对 `.app` 做最终重签名，避免“已损坏，无法打开”。
+- 若同事机器仍被 Gatekeeper 阻止，可执行一次：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/AutoPaperdownload.app
+```
+
+或在 Finder 中右键应用选择“打开”完成首次放行。
+
 ## 🌐 添加新网站支持
 
 通过 GUI 的"域名规则向导"三步完成，或手动编辑配置文件：

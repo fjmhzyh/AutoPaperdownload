@@ -11,6 +11,7 @@ APP_PATH="$ROOT_DIR/dist/${APP_NAME}.app"
 APP_WORKERS_DIR="$APP_PATH/Contents/Workers"
 BUILD_ASSETS_DIR="$ROOT_DIR/.build_assets"
 CSV_TEMPLATE_PATH="$BUILD_ASSETS_DIR/PaperDoi.csv"
+MAC_SIGN_IDENTITY="${MAC_SIGN_IDENTITY:--}"
 
 if [ -z "${PYINSTALLER_CONFIG_DIR:-}" ]; then
   export PYINSTALLER_CONFIG_DIR="$ROOT_DIR/.pyinstaller-cache"
@@ -63,7 +64,24 @@ for worker in "${WORKERS[@]}"; do
   chmod +x "$APP_WORKERS_DIR/$worker/$worker"
 done
 
+# Important: workers are copied after PyInstaller signs the app bundle,
+# so we must re-sign the final app to avoid "app is damaged" on other Macs.
+xattr -cr "$APP_PATH" || true
+codesign --force --deep --sign "$MAC_SIGN_IDENTITY" "$APP_PATH"
+codesign --verify --deep --strict "$APP_PATH"
+
 DMG_PATH="$RELEASE_DIR/AutoPaperdownload-${VERSION}-mac-arm64.dmg"
-hdiutil create -volname "$APP_NAME" -srcfolder "$APP_PATH" -ov -format UDZO "$DMG_PATH"
+for i in 1 2 3; do
+  if hdiutil create -volname "$APP_NAME" -srcfolder "$APP_PATH" -ov -format UDZO "$DMG_PATH"; then
+    break
+  fi
+  if [ "$i" -eq 3 ]; then
+    echo "错误: DMG 生成失败，请重试（hdiutil 连续 3 次失败）" >&2
+    exit 1
+  fi
+  echo "警告: 第 $i 次生成 DMG 失败，3 秒后重试..." >&2
+  sleep 3
+done
+shasum -a 256 "$DMG_PATH" > "$DMG_PATH.sha256"
 
 echo "构建完成: $DMG_PATH"

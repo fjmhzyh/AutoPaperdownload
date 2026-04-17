@@ -66,6 +66,12 @@ foreach ($worker in $workers) {
 $iscc = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
 if (Test-Path $iscc) {
   & $iscc "/DMyAppVersion=$version" "/DSourceDir=$distDir" "packaging\\autopaperdownload.iss"
+  $hashOut = "release\\win\\SHA256SUMS.txt"
+  if (Test-Path $hashOut) { Remove-Item $hashOut -Force }
+  Get-ChildItem "release\\win\\*.exe" | ForEach-Object {
+    $h = Get-FileHash $_.FullName -Algorithm SHA256
+    "$($h.Hash)  $($_.Name)" | Out-File -FilePath $hashOut -Encoding utf8 -Append
+  }
   Write-Host "安装包已生成到 release\\win"
 } else {
   Write-Warning "未检测到 Inno Setup，已生成可分发目录: $distDir"

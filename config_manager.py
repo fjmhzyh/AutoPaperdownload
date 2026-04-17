@@ -48,6 +48,16 @@ JSON_FILENAMES = {
 CSV_DEFAULT_PATH = data_path("PaperDoi.csv")
 LOG_DIR = data_path("log")
 MAX_LOG_LINES = 5000
+DEFAULT_PAPER_CSV_HEADERS = [
+    "DOI",
+    "DownloadStatus",
+    "Filename",
+    "URL",
+    "DownloadURL",
+    "SIDownloadStatus",
+    "SIFilename",
+    "HTMLFilename",
+]
 
 
 class PaperAutomationConsole:
@@ -88,6 +98,14 @@ class PaperAutomationConsole:
         self.csv_columns = []
         self.csv_data_rows = []
         self.csv_column_widths = {}
+        self.csv_dirty = False
+        self.csv_edit_enabled = tk.BooleanVar(value=False)
+        self.csv_dirty_var = tk.StringVar(value="状态: 已保存")
+        self.csv_edit_entry = None
+        self.csv_edit_item_id = None
+        self.csv_edit_col_index = None
+        self._ignore_tab_change = False
+        self._last_notebook_tab = 0
         self.csv_path_var = tk.StringVar(value=CSV_DEFAULT_PATH)
         self.csv_row_count_var = tk.StringVar(value="总行数: 0")
         self.csv_refresh_time_var = tk.StringVar(value="最后刷新: -")
@@ -145,6 +163,9 @@ class PaperAutomationConsole:
         self.notebook.add(self.editor_frame, text=" JSON 源码编辑器 ")
         self.setup_json_editor_tab()
 
+        self._last_notebook_tab = self.notebook.index("current")
+        self.notebook.bind("<<NotebookTabChanged>>", self._on_notebook_tab_changed)
+
     def setup_run_and_wizard_tab(self):
         left_frame = ttk.LabelFrame(self.run_frame, text=" 核心任务启动 ")
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -158,12 +179,20 @@ class PaperAutomationConsole:
             ("si", "3. 补充材料下载"),
             ("clean", "4. 坏文件清理"),
             ("csv_turner", "5. 提取失败 DOI"),
-            ("doiexacter", "6. 指定文档 DOI 提取"),
         ]
         for script_key, nickname in tasks:
             frame = ttk.Frame(left_frame)
             frame.pack(fill=tk.X, padx=20, pady=5)
             ttk.Button(frame, text=nickname, width=28, command=lambda s=script_key: self.execute_script(s)).pack(side=tk.LEFT)
+
+        import_frame = ttk.Frame(left_frame)
+        import_frame.pack(fill=tk.X, padx=20, pady=(10, 5))
+        ttk.Button(
+            import_frame,
+            text="6. 上传DOI CSV并追加",
+            width=28,
+            command=self._import_doi_csv,
+        ).pack(side=tk.LEFT)
 
         right_frame = ttk.LabelFrame(self.run_frame, text=" 域名规则向导 ")
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -273,10 +302,29 @@ class PaperAutomationConsole:
         ttk.Label(info_frame, textvariable=self.csv_path_var).grid(row=0, column=1, sticky=tk.W, padx=6, pady=4)
         ttk.Label(info_frame, textvariable=self.csv_row_count_var).grid(row=1, column=0, sticky=tk.W, padx=6, pady=4)
         ttk.Label(info_frame, textvariable=self.csv_refresh_time_var).grid(row=1, column=1, sticky=tk.W, padx=6, pady=4)
-        ttk.Label(info_frame, textvariable=self.csv_error_var, foreground="red").grid(
-            row=2, column=0, columnspan=2, sticky=tk.W, padx=6, pady=4
+        ttk.Label(info_frame, textvariable=self.csv_dirty_var, foreground="#b26a00").grid(
+            row=0, column=2, sticky=tk.W, padx=6, pady=4
         )
-        ttk.Button(info_frame, text="刷新", command=self._refresh_csv_table).grid(row=0, column=2, rowspan=2, padx=10, pady=4)
+        ttk.Label(info_frame, textvariable=self.csv_error_var, foreground="red").grid(
+            row=2, column=0, columnspan=3, sticky=tk.W, padx=6, pady=4
+        )
+        ttk.Button(info_frame, text="刷新", command=self._refresh_csv_table).grid(row=1, column=2, padx=6, pady=4, sticky=tk.W)
+
+        ops_frame = ttk.Frame(self.csv_frame)
+        ops_frame.pack(fill=tk.X, padx=10, pady=(0, 8))
+        ttk.Checkbutton(
+            ops_frame,
+            text="编辑模式",
+            variable=self.csv_edit_enabled,
+            command=self._enable_csv_edit_mode,
+        ).pack(side=tk.LEFT)
+        ttk.Button(ops_frame, text="保存CSV", command=self._save_csv_table).pack(side=tk.LEFT, padx=6)
+        ttk.Button(ops_frame, text="清空数据(保留表头)", command=self._clear_csv_rows_keep_header).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            ops_frame,
+            text="打开数据根目录",
+            command=self._open_data_root_from_csv,
+        ).pack(side=tk.LEFT, padx=6)
 
         table_frame = ttk.Frame(self.csv_frame)
         table_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
@@ -297,6 +345,7 @@ class PaperAutomationConsole:
         csv_h_scroll.grid(row=1, column=0, sticky="ew")
         table_frame.rowconfigure(0, weight=1)
         table_frame.columnconfigure(0, weight=1)
+        self.csv_tree.bind("<Double-1>", self._on_csv_double_click)
 
     def setup_folder_browser_tab(self):
         ctrl_frame = ttk.Frame(self.folder_frame)
@@ -775,6 +824,9 @@ class PaperAutomationConsole:
         if self.is_closing:
             return
 
+        if not self._confirm_discard_or_save_csv_changes(reload_on_discard=False):
+            return
+
         active_pids = self._collect_active_pids()
         if active_pids:
             yes = messagebox.askyesno(
@@ -1079,21 +1131,360 @@ class PaperAutomationConsole:
         self.current_script_name = info.get("script", "")
         self._update_log_filter_target()
 
-    def _refresh_csv_table(self):
+    def _on_notebook_tab_changed(self, _event=None):
+        if self._ignore_tab_change:
+            return
+        try:
+            current_index = self.notebook.index("current")
+        except Exception:
+            return
+
+        previous_index = self._last_notebook_tab
+        if previous_index == current_index:
+            return
+
+        csv_tab_index = self.notebook.index(self.csv_frame)
+        if previous_index == csv_tab_index and self.csv_dirty:
+            if not self._confirm_discard_or_save_csv_changes():
+                self._ignore_tab_change = True
+                self.notebook.select(previous_index)
+                self.root.after(50, lambda: setattr(self, "_ignore_tab_change", False))
+                return
+
+        self._last_notebook_tab = current_index
+
+    def _set_csv_dirty(self, dirty: bool):
+        self.csv_dirty = bool(dirty)
+        self.csv_dirty_var.set("状态: 未保存修改" if self.csv_dirty else "状态: 已保存")
+
+    def _find_column_name_case_insensitive(self, columns, target: str):
+        target_norm = str(target).strip().lower()
+        for col in columns or []:
+            if str(col).strip().lower() == target_norm:
+                return col
+        return None
+
+    def _get_active_csv_path(self) -> str:
         path = self.csv_path_var.get().strip() or CSV_DEFAULT_PATH
-        path = os.path.abspath(path)
+        path = os.path.abspath(os.path.expanduser(path))
         self.csv_path_var.set(path)
+        return path
+
+    def _import_doi_csv(self):
+        import_path = filedialog.askopenfilename(
+            title="选择包含DOI的CSV文件",
+            filetypes=[("CSV文件", "*.csv"), ("所有文件", "*.*")],
+        )
+        if not import_path:
+            return
+
+        try:
+            dois, read_stats = self._load_dois_from_csv(import_path)
+            write_stats = self._append_new_dois_to_main_csv(dois)
+            duplicate_skipped = int(read_stats["source_duplicates"]) + int(write_stats["existing_duplicates"])
+
+            summary = (
+                f"读取数据行: {read_stats['total_rows']}\n"
+                f"有效DOI: {read_stats['valid_rows']}\n"
+                f"新增写入: {write_stats['added']}\n"
+                f"重复跳过: {duplicate_skipped}\n"
+                f"目标文件: {write_stats['target_path']}"
+            )
+            messagebox.showinfo("导入完成", summary)
+            self._refresh_csv_table(force=True)
+            self._prompt_start_paper_download(write_stats["added"], duplicate_skipped)
+        except ValueError as exc:
+            messagebox.showwarning("导入失败", str(exc))
+        except Exception as exc:
+            messagebox.showerror("导入失败", f"导入CSV时发生错误:\n{exc}")
+
+    def _load_dois_from_csv(self, file_path: str):
+        with open(file_path, "r", encoding="utf-8-sig", newline="") as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+        if not rows:
+            raise ValueError("CSV为空，无法导入。")
+
+        header = rows[0]
+        doi_index = -1
+        for idx, col in enumerate(header):
+            if str(col).strip().lower() == "doi":
+                doi_index = idx
+                break
+        if doi_index < 0:
+            raise ValueError("CSV格式不符合要求：未找到 DOI 列。")
+
+        total_rows = max(0, len(rows) - 1)
+        valid_rows = 0
+        seen = set()
+        unique_dois = []
+        for row in rows[1:]:
+            if doi_index >= len(row):
+                continue
+            raw_doi = str(row[doi_index]).strip()
+            if not raw_doi:
+                continue
+            valid_rows += 1
+            doi_norm = raw_doi.lower()
+            if doi_norm in seen:
+                continue
+            seen.add(doi_norm)
+            unique_dois.append(raw_doi)
+
+        source_duplicates = max(0, valid_rows - len(unique_dois))
+        return unique_dois, {
+            "total_rows": total_rows,
+            "valid_rows": valid_rows,
+            "source_duplicates": source_duplicates,
+        }
+
+    def _append_new_dois_to_main_csv(self, dois):
+        target_path = self._get_active_csv_path()
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+        rows = []
+        header = []
+        doi_column = "DOI"
+
+        if os.path.exists(target_path):
+            with open(target_path, "r", encoding="utf-8-sig", newline="") as file:
+                reader = csv.DictReader(file)
+                header = list(reader.fieldnames) if reader.fieldnames else []
+                for row in reader:
+                    rows.append(dict(row))
+
+        if not header:
+            header = list(DEFAULT_PAPER_CSV_HEADERS)
+            doi_column = "DOI"
+        else:
+            found_doi_column = self._find_column_name_case_insensitive(header, "DOI")
+            if found_doi_column:
+                doi_column = found_doi_column
+            else:
+                header.insert(0, "DOI")
+                doi_column = "DOI"
+
+        for row in rows:
+            for col in header:
+                row.setdefault(col, "")
+
+        existing_dois = set()
+        for row in rows:
+            raw_doi = str(row.get(doi_column, "")).strip()
+            if raw_doi:
+                existing_dois.add(raw_doi.lower())
+
+        added = 0
+        existing_duplicates = 0
+        for doi in dois:
+            raw_doi = str(doi).strip()
+            if not raw_doi:
+                continue
+            doi_norm = raw_doi.lower()
+            if doi_norm in existing_dois:
+                existing_duplicates += 1
+                continue
+            new_row = {col: "" for col in header}
+            new_row[doi_column] = raw_doi
+            rows.append(new_row)
+            existing_dois.add(doi_norm)
+            added += 1
+
+        with open(target_path, "w", encoding="utf-8-sig", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=header)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow({col: row.get(col, "") for col in header})
+
+        return {
+            "added": added,
+            "existing_duplicates": existing_duplicates,
+            "target_path": target_path,
+        }
+
+    def _prompt_start_paper_download(self, added_count: int, duplicate_skipped: int):
+        prompt = (
+            f"DOI导入已完成。\n新增写入: {added_count}，重复跳过: {duplicate_skipped}\n\n"
+            "是否立即开始下载论文（Paperdownload.py）？"
+        )
+        if messagebox.askyesno("开始下载", prompt):
+            self.execute_script("paper")
+
+    def _enable_csv_edit_mode(self):
+        if not self.csv_edit_enabled.get():
+            self._close_csv_edit_entry(commit=True)
+
+    def _on_csv_double_click(self, event):
+        if not self.csv_edit_enabled.get():
+            return
+        if not self.csv_columns:
+            return
+
+        item_id = self.csv_tree.identify_row(event.y)
+        col_id = self.csv_tree.identify_column(event.x)
+        if not item_id or not col_id or col_id == "#0":
+            return
+
+        try:
+            col_index = int(col_id.replace("#", "")) - 1
+        except Exception:
+            return
+        if col_index < 0 or col_index >= len(self.csv_columns):
+            return
+
+        bbox = self.csv_tree.bbox(item_id, col_id)
+        if not bbox:
+            return
+        x, y, width, height = bbox
+
+        self._close_csv_edit_entry(commit=True)
+        current_values = list(self.csv_tree.item(item_id, "values"))
+        current_value = current_values[col_index] if col_index < len(current_values) else ""
+
+        entry = tk.Entry(self.csv_tree)
+        entry.insert(0, current_value)
+        entry.place(x=x, y=y, width=width, height=height)
+        entry.focus_set()
+        entry.select_range(0, tk.END)
+        entry.bind("<Return>", lambda _e: self._commit_csv_cell_edit())
+        entry.bind("<Escape>", lambda _e: self._close_csv_edit_entry(commit=False))
+        entry.bind("<FocusOut>", lambda _e: self._commit_csv_cell_edit())
+
+        self.csv_edit_entry = entry
+        self.csv_edit_item_id = item_id
+        self.csv_edit_col_index = col_index
+
+    def _close_csv_edit_entry(self, commit: bool = False):
+        if commit:
+            self._commit_csv_cell_edit()
+            return
+        if self.csv_edit_entry is not None:
+            try:
+                self.csv_edit_entry.destroy()
+            except Exception:
+                pass
+        self.csv_edit_entry = None
+        self.csv_edit_item_id = None
+        self.csv_edit_col_index = None
+
+    def _commit_csv_cell_edit(self):
+        entry = self.csv_edit_entry
+        if entry is None:
+            return
+
+        item_id = self.csv_edit_item_id
+        col_index = self.csv_edit_col_index
+        new_value = entry.get()
+
+        try:
+            entry.destroy()
+        except Exception:
+            pass
+        self.csv_edit_entry = None
+        self.csv_edit_item_id = None
+        self.csv_edit_col_index = None
+
+        if item_id is None or col_index is None:
+            return
+        if col_index < 0 or col_index >= len(self.csv_columns):
+            return
+
+        try:
+            row_index = self.csv_tree.index(item_id)
+        except Exception:
+            return
+        if row_index < 0 or row_index >= len(self.csv_data_rows):
+            return
+
+        old_value = self.csv_data_rows[row_index][col_index]
+        if new_value == old_value:
+            return
+
+        self.csv_data_rows[row_index][col_index] = new_value
+        self.csv_tree.set(item_id, self.csv_columns[col_index], new_value)
+        self._set_csv_dirty(True)
+
+    def _save_csv_table(self, show_message: bool = True):
+        self._close_csv_edit_entry(commit=True)
+
+        if not self.csv_columns:
+            if show_message:
+                messagebox.showwarning("保存失败", "当前CSV没有可保存的表头。")
+            return False
+
+        path = self._get_active_csv_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        try:
+            with open(path, "w", encoding="utf-8-sig", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(self.csv_columns)
+                for row in self.csv_data_rows:
+                    writer.writerow(self._normalize_csv_row(row, len(self.csv_columns)))
+
+            self.csv_error_var.set("")
+            self.csv_row_count_var.set(f"总行数: {len(self.csv_data_rows)}")
+            self.csv_refresh_time_var.set(f"最后刷新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self._set_csv_dirty(False)
+            if show_message:
+                messagebox.showinfo("保存成功", f"CSV已保存:\n{path}")
+            return True
+        except Exception as exc:
+            self.csv_error_var.set(f"保存失败: {exc}")
+            if show_message:
+                messagebox.showerror("保存失败", f"写入CSV失败:\n{exc}")
+            return False
+
+    def _clear_csv_rows_keep_header(self):
+        if not self.csv_columns:
+            messagebox.showwarning("清空失败", "当前CSV没有可用表头，无法执行清空。")
+            return
+
+        yes = messagebox.askyesno("确认清空", "确认清空所有数据行吗？\n该操作将仅保留表头。")
+        if not yes:
+            return
+
+        backup_rows = [list(row) for row in self.csv_data_rows]
+        self.csv_data_rows = []
+        self._render_csv_rows()
+        self._set_csv_dirty(True)
+
+        if not self._save_csv_table(show_message=False):
+            self.csv_data_rows = backup_rows
+            self._render_csv_rows()
+            self._set_csv_dirty(True)
+            return
+
+        messagebox.showinfo("清空完成", "CSV已清空，当前仅保留表头。")
+
+    def _confirm_discard_or_save_csv_changes(self, reload_on_discard: bool = True):
+        self._close_csv_edit_entry(commit=True)
+        if not self.csv_dirty:
+            return True
+
+        choice = messagebox.askyesnocancel("未保存修改", "CSV存在未保存修改，是否先保存？")
+        if choice is None:
+            return False
+        if choice:
+            return self._save_csv_table(show_message=False)
+
+        self._set_csv_dirty(False)
+        if reload_on_discard:
+            self._refresh_csv_table(force=True)
+        return True
+
+    def _refresh_csv_table(self, force: bool = False):
+        if not force and not self._confirm_discard_or_save_csv_changes(reload_on_discard=False):
+            return
+
+        path = self._get_active_csv_path()
         self.csv_error_var.set("")
+        self._close_csv_edit_entry(commit=False)
 
         previous_columns = list(self.csv_tree["columns"])
-        if previous_columns:
-            for col in previous_columns:
-                try:
-                    width = int(self.csv_tree.column(col, "width"))
-                    if width > 0:
-                        self.csv_column_widths[col] = width
-                except Exception:
-                    continue
+        self._capture_current_csv_column_widths()
+        same_schema = bool(previous_columns) and previous_columns == self.csv_columns
 
         self.csv_tree.delete(*self.csv_tree.get_children())
         self.csv_tree["columns"] = []
@@ -1104,6 +1495,7 @@ class PaperAutomationConsole:
             self.csv_error_var.set("CSV文件不存在")
             self.csv_row_count_var.set("总行数: 0")
             self.csv_refresh_time_var.set(f"最后刷新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self._set_csv_dirty(False)
             return
 
         try:
@@ -1115,6 +1507,7 @@ class PaperAutomationConsole:
                 self.csv_error_var.set("CSV为空")
                 self.csv_row_count_var.set("总行数: 0")
                 self.csv_refresh_time_var.set(f"最后刷新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self._set_csv_dirty(False)
                 return
 
             self.csv_columns = rows[0]
@@ -1124,24 +1517,41 @@ class PaperAutomationConsole:
             self.csv_tree["columns"] = self.csv_columns
             for index, col in enumerate(self.csv_columns):
                 self.csv_tree.heading(col, text=col, command=lambda c=col: self._sort_csv_by_column(c))
-                width = self.csv_column_widths.get(col)
-                if not width:
+                # 刷新时优先使用用户当前列宽（同结构时绝不重置）
+                width = self.csv_column_widths.get(col) if same_schema else None
+                if not width or int(width) <= 0:
+                    width = self.csv_column_widths.get(col)
+                if not width or int(width) <= 0:
                     width = self._estimate_csv_column_width(col, index, self.csv_data_rows)
                     self.csv_column_widths[col] = width
-                self.csv_tree.column(col, width=width, minwidth=90, stretch=True, anchor=tk.W)
+                self.csv_tree.column(col, width=int(width), minwidth=90, stretch=False, anchor=tk.W)
 
             self._render_csv_rows()
             self.csv_row_count_var.set(f"总行数: {len(self.csv_data_rows)}")
             self.csv_refresh_time_var.set(f"最后刷新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self._set_csv_dirty(False)
         except Exception as exc:
             self.csv_error_var.set(f"读取失败: {exc}")
             self.csv_row_count_var.set("总行数: 0")
             self.csv_refresh_time_var.set(f"最后刷新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self._set_csv_dirty(False)
 
     def _normalize_csv_row(self, row, col_count):
         if len(row) < col_count:
             return row + [""] * (col_count - len(row))
         return row[:col_count]
+
+    def _capture_current_csv_column_widths(self):
+        columns = list(self.csv_tree["columns"])
+        if not columns:
+            return
+        for col in columns:
+            try:
+                width = int(self.csv_tree.column(col, "width"))
+                if width > 0:
+                    self.csv_column_widths[col] = width
+            except Exception:
+                continue
 
     def _render_csv_rows(self):
         self.csv_tree.delete(*self.csv_tree.get_children())
@@ -1164,6 +1574,7 @@ class PaperAutomationConsole:
         return max(min_width, min(max_width, int(estimated)))
 
     def _sort_csv_by_column(self, col_name: str):
+        self._close_csv_edit_entry(commit=True)
         if not self.csv_columns or col_name not in self.csv_columns:
             return
         index = self.csv_columns.index(col_name)
@@ -1243,6 +1654,9 @@ class PaperAutomationConsole:
                 subprocess.Popen(["xdg-open", path])
         except Exception as exc:
             self._append_log_line("GUI", f"打开路径失败: {path} | {exc}")
+
+    def _open_data_root_from_csv(self):
+        self._open_path_in_system(DATA_DIR)
 
     def _format_size(self, size_bytes: int) -> str:
         size = float(size_bytes)

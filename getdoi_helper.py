@@ -503,6 +503,7 @@ def main():
             logger.info(f"\n正在执行搜索: {SEARCH_QUERY}")
             try:
                 pyautogui.typewrite(SEARCH_QUERY, interval=0.05)
+                time.sleep(1)
                 pyautogui.press('enter')
                 time.sleep(5)
             except Exception as e:

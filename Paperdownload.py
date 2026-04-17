@@ -530,9 +530,20 @@ class WebScraper:
             print(f"[URL获取] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
             time.sleep(Config.PAGE_LOAD_TIMEOUT)
 
-            final_url = self._get_current_url()
+            final_url = None
+            for attempt in range(1, 4):
+                try:
+                    pyperclip.copy("")
+                except Exception:
+                    pass
+                final_url = self._get_current_url()
+                if final_url:
+                    break
+                print(f"[URL获取重试] 第{attempt}/3次读取地址栏失败，2秒后重试")
+                time.sleep(2)
+
             if not final_url:
-                print("[URL获取错误] 地址栏URL为空")
+                print("[URL获取错误] 地址栏URL为空或读取失败")
                 return None
 
             print(f"[URL解析成功] DOI={doi} -> {final_url}")
@@ -551,6 +562,7 @@ class WebScraper:
             hotkey("select_all")
             pyautogui.press("backspace")
             pyautogui.write(url, interval=0.01)
+            pyautogui.press("enter")
             pyautogui.press("enter")
             return True
         except Exception as e:
@@ -609,14 +621,21 @@ class WebScraper:
     def _get_current_url(self) -> Optional[str]:
         """获取当前浏览器URL"""
         try:
-            print("[PyAutoGUI] 获取当前URL...")
+            pyperclip.copy('')
             hotkey("focus_address_bar")
             time.sleep(1)
             hotkey("select_all")
             time.sleep(1)
             hotkey("copy")
             time.sleep(2)
-            return pyperclip.paste().strip()
+            copied = (pyperclip.paste() or "").strip()
+            if not copied:
+                print("[PyAutoGUI警告] 剪贴板为空，复制url失败")
+                return None
+            if not (copied.startswith("http://") or copied.startswith("https://")):
+                print(f"[PyAutoGUI警告] url复制错误: {copied}")
+                return None
+            return copied
         except Exception as e:
             print(f"[PyAutoGUI错误] 获取URL失败: {str(e)}")
             return None
@@ -1030,6 +1049,8 @@ class FileDownloader:
             pyautogui.press("backspace")
             pyautogui.write(url, interval=0.01)
             pyautogui.press("enter")
+            time.sleep(0.5)
+            pyautogui.press("enter")
             print(f"[浏览器] 已在新标签页打开URL: {url}")
         except Exception as e:
             print(f"[浏览器警告] 新标签页打开失败，回退系统打开: {str(e)}")
@@ -1082,6 +1103,7 @@ class FileDownloader:
             time.sleep(2)
             pyautogui.press('enter')
             time.sleep(2)
+            pyautogui.press('enter')
             pyautogui.press('enter')
             time.sleep(2)
 
@@ -2051,7 +2073,32 @@ class PaperProcessor:
     def _get_final_url(self, doi: str) -> Optional[str]:
         """获取论文的最终URL"""
         print(f"[URL获取] 正在获取DOI={doi}的最终URL")
-        return self.web_scraper.resolve_final_url_with_pyautogui(doi)
+        final_url = self.web_scraper.resolve_final_url_with_pyautogui(doi)
+        if self._is_valid_final_url(final_url):
+            return final_url
+
+        if final_url:
+            print(f"[URL解析警告] DOI={doi} 地址栏结果异常，将启用HTTP兜底: {final_url}")
+        else:
+            print(f"[URL解析警告] DOI={doi} 地址栏读取失败，将启用HTTP兜底")
+
+        fallback_url = self._resolve_final_url_via_http(doi)
+        if fallback_url and self._is_valid_final_url(fallback_url):
+            print(f"[URL解析兜底成功] DOI={doi} -> {fallback_url}")
+            return fallback_url
+        return None
+
+    @staticmethod
+    def _is_valid_final_url(url: Optional[str]) -> bool:
+        if not url:
+            return False
+        candidate = str(url).strip()
+        if not (candidate.startswith("http://") or candidate.startswith("https://")):
+            return False
+        parsed = urlparse(candidate)
+        if not parsed.netloc:
+            return False
+        return True
 
     def _resolve_final_url_via_http(self, doi: str) -> Optional[str]:
         """通过HTTP重定向解析DOI最终URL"""
