@@ -38,7 +38,13 @@ def get_app_dir() -> str:
 def get_data_dir() -> str:
     override = os.environ.get("AUTOPAPERDOWNLOAD_DATA_DIR", "").strip()
     if override:
-        return os.path.abspath(os.path.expanduser(override))
+        resolved = os.path.abspath(os.path.expanduser(override))
+        if sys.platform == "darwin":
+            resolved = resolved.replace(
+                "/Library/ApplicationSupport/",
+                "/Library/Application Support/",
+            )
+        return resolved
 
     if not is_frozen_app():
         return os.path.dirname(os.path.abspath(__file__))

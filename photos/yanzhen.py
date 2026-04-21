@@ -3,11 +3,14 @@ import time
 import random
 import os
 import math
+import sys
+
+IS_MAC = sys.platform == "darwin"
 
 # === ⚙️ 配置区域 ===
 
 # 图片文件名
-IMAGE_NAME = 'target.jpeg'
+IMAGE_NAME = 'target.png' if IS_MAC else 'target.jpeg'
 
 # 匹配相似度
 CONFIDENCE = 0.8           
@@ -105,6 +108,9 @@ def simulate_human_click(location):
         # 目标点随机偏移 (防止总是点击同一个像素)
         final_x = x + random.randint(-5, 5)
         final_y = y + random.randint(-5, 5)
+
+        final_x = int(final_x / 2) if IS_MAC else final_x
+        final_y = int(final_y / 2) if IS_MAC else final_y
         
         print(f"✅ 发现目标！坐标: ({final_x}, {final_y})，正在移动...")
         
@@ -117,6 +123,7 @@ def simulate_human_click(location):
         # 模拟人类确认时的微小停顿
         time.sleep(random.uniform(0.1, 0.2))
         pyautogui.click()
+        pyautogui.click()
         return True
     return False
 
@@ -125,6 +132,7 @@ def main():
     
     print("=" * 40)
     print(f"🤖 超级自动点击器 (拟人+防崩版)")
+    print(f"当前系统: {sys.platform}")
     print(f"📂 正在监听图片: {IMAGE_NAME}")
     print(f"🛑 停止运行请按 Ctrl+C")
     if SEARCH_REGION:

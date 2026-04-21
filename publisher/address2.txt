@@ -1,0 +1,400 @@
+7-025-60959-z
+正在解析: 10.1038/s41541-025-01201-1
+  -> https://www.nature.com/articles/s41541-025-01201-1
+正在解析: 10.1093/bib/bbaf307
+  -> https://academic.oup.com/bib/article/26/3/bbaf307/8177287
+正在解析: 10.3390/ph18060864
+  -> https://www.mdpi.com/1424-8247/18/6/864
+正在解析: 10.1002/adhm.202501788
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202501788
+正在解析: 10.1158/1535-7163.MCT-24-0173
+[错误] DOI 10.1158/1535-7163.MCT-24-0173 解析失败: HTTPSConnectionPool(host='aacrjournals.org', port=443): Read timed out. (read timeout=10)
+  -> 解析失败
+正在解析: 10.1038/s41565-025-01958-5
+  -> https://www.nature.com/articles/s41565-025-01958-5
+正在解析: 10.1021/acsami.5c08444
+  -> https://pubs.acs.org/doi/10.1021/acsami.5c08444
+正在解析: 10.1016/j.actbio.2025.06.017
+  -> https://linkinghub.elsevier.com/retrieve/pii/S1742706125004246
+正在解析: 10.3791/67711
+  -> https://app.jove.com/t/67711/determining-four-components-lipid-nanoparticle-rna-delivery-system
+正在解析: 10.1002/adhm.202501305
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202501305
+正在解析: 10.3390/ijms26115138
+  -> https://www.mdpi.com/1422-0067/26/11/5138
+正在解析: 10.1016/j.ijpharm.2025.125843
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517325006805
+正在解析: 10.1016/j.jconrel.2025.113945
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925005656
+正在解析: 10.1021/acsami.5c04597
+  -> https://pubs.acs.org/doi/10.1021/acsami.5c04597
+正在解析: 10.1021/jacs.5c01389
+  -> https://pubs.acs.org/doi/10.1021/jacs.5c01389
+正在解析: 10.1038/s41541-025-01153-6
+  -> https://www.nature.com/articles/s41541-025-01153-6
+正在解析: 10.1016/j.jconrel.2025.113944
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925005644
+正在解析: 10.1021/acs.jctc.5c00498
+  -> https://pubs.acs.org/doi/10.1021/acs.jctc.5c00498
+正在解析: 10.1080/17425247.2025.2518225
+  -> https://www.tandfonline.com/doi/full/10.1080/17425247.2025.2518225
+正在解析: 10.1016/j.omtn.2025.102547
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2162253125001015
+正在解析: 10.3724/zdxbyxb-2024-0709
+  -> https://www.sciengine.com/JZJUMS/doi/10.3724/zdxbyxb-2024-0709
+正在解析: 10.3762/bjnano.16.57
+  -> https://www.beilstein-journals.org/bjnano/articles/16/57
+正在解析: 10.1016/j.jconrel.2025.113906
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925005267
+正在解析: 10.1021/acsnano.5c04036
+  -> https://pubs.acs.org/doi/10.1021/acsnano.5c04036
+正在解析: 10.1016/j.omtm.2025.101470
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2329050125000658
+正在解析: 10.1080/20415990.2025.2506977
+  -> https://www.tandfonline.com/doi/full/10.1080/20415990.2025.2506977
+正在解析: 10.1039/d5md00115c
+  -> https://pubs.rsc.org/en/content/articlelanding/2025/md/d5md00115c
+正在解析: 10.1016/j.jconrel.2025.113892
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925005127
+正在解析: 10.1021/acsnano.5c01378
+  -> https://pubs.acs.org/doi/10.1021/acsnano.5c01378
+正在解析: 10.1016/j.cca.2025.120387
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0009898125002669
+正在解析: 10.3390/membranes15050153
+  -> https://www.mdpi.com/2077-0375/15/5/153
+正在解析: 10.1016/j.biomaterials.2025.123421
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0142961225003400
+正在解析: 10.1016/j.jconrel.2025.113879
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925004997
+正在解析: 10.1016/j.jconrel.2025.113848
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925004687
+正在解析: 10.1021/acsnano.5c02283
+  -> https://pubs.acs.org/doi/10.1021/acsnano.5c02283
+正在解析: 10.1021/acsmaterialsau.4c00158
+  -> https://pubs.acs.org/doi/10.1021/acsmaterialsau.4c00158
+正在解析: 10.1096/fj.202500622R
+  -> https://faseb.onlinelibrary.wiley.com/doi/10.1096/fj.202500622R
+正在解析: 10.1002/mabi.202500165
+  -> https://onlinelibrary.wiley.com/doi/10.1002/mabi.202500165
+正在解析: 10.1002/advs.202500362
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202500362
+正在解析: 10.1021/jacs.5c04123
+  -> https://pubs.acs.org/doi/10.1021/jacs.5c04123
+正在解析: 10.1038/s41467-025-59501-y
+  -> https://www.nature.com/articles/s41467-025-59501-y
+正在解析: 10.3390/vaccines13040339
+  -> https://www.mdpi.com/2076-393X/13/4/339
+正在解析: 10.3390/vaccines13040370
+  -> https://www.mdpi.com/2076-393X/13/4/370
+正在解析: 10.1021/acs.molpharmaceut.5c00248
+[错误] DOI 10.1021/acs.molpharmaceut.5c00248 解析失败: HTTPSConnectionPool(host='pubs.acs.org', port=443): Max retries exceeded with url: /doi/10.1021/acs.molpharmaceut.5c00248 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)')))
+  -> 解析失败
+正在解析: 10.1016/j.ejps.2025.107118
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0928098725001174
+正在解析: 10.1021/acsami.5c06464
+  -> https://pubs.acs.org/doi/10.1021/acsami.5c06464
+正在解析: 10.1016/j.jconrel.2025.113811
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925004316
+正在解析: 10.1016/j.omtm.2025.101457
+  -> https://linkinghub.elsevier.com/retrieve/pii/S232905012500052X
+正在解析: 10.1002/adhm.202501037
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202501037
+正在解析: 10.1038/s41467-025-58523-w
+  -> https://www.nature.com/articles/s41467-025-58523-w
+正在解析: 10.1002/adma.202417097
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adma.202417097
+正在解析: 10.1002/anie.202506954
+  -> https://onlinelibrary.wiley.com/doi/10.1002/anie.202506954
+正在解析: 10.1371/journal.pntd.0012999
+  -> https://journals.plos.org/plosntds/article?id=10.1371/journal.pntd.0012999
+正在解析: 10.1080/02652048.2025.2495290
+  -> https://www.tandfonline.com/doi/full/10.1080/02652048.2025.2495290
+正在解析: 10.1021/acsabm.5c00116
+  -> https://pubs.acs.org/doi/10.1021/acsabm.5c00116
+正在解析: 10.1016/j.ejpb.2025.114726
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0939641125001031
+正在解析: 10.1002/adma.202502055
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adma.202502055
+正在解析: 10.3390/pharmaceutics17040459
+  -> https://www.mdpi.com/1999-4923/17/4/459
+正在解析: 10.1208/s12248-025-01073-2
+  -> https://link.springer.com/article/10.1208/s12248-025-01073-2
+正在解析: 10.1002/smtd.202401712
+  -> https://onlinelibrary.wiley.com/doi/10.1002/smtd.202401712
+正在解析: 10.1002/smll.202501903
+  -> https://onlinelibrary.wiley.com/doi/10.1002/smll.202501903
+正在解析: 10.1038/s41541-025-01124-x
+  -> https://www.nature.com/articles/s41541-025-01124-x
+正在解析: 10.1021/acsabm.5c00076
+  -> https://pubs.acs.org/doi/10.1021/acsabm.5c00076
+正在解析: 10.1038/s42004-025-01516-z
+  -> https://www.nature.com/articles/s42004-025-01516-z
+正在解析: 10.1016/j.jconrel.2025.113737
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925003578
+正在解析: 10.1016/j.jconrel.2025.113709
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925003293
+正在解析: 10.1039/d5bm00317b
+  -> https://pubs.rsc.org/en/content/articlelanding/2025/bm/d5bm00317b
+正在解析: 10.1002/smsc.202400145
+  -> https://onlinelibrary.wiley.com/doi/10.1002/smsc.202400145
+正在解析: 10.1002/smsc.202300270
+  -> https://onlinelibrary.wiley.com/doi/10.1002/smsc.202300270
+正在解析: 10.1021/acs.molpharmaceut.5c00402
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.5c00402
+正在解析: 10.1016/j.jconrel.2025.113687
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925003074
+正在解析: 10.1021/acs.biomac.4c01820
+  -> https://pubs.acs.org/doi/10.1021/acs.biomac.4c01820
+正在解析: 10.1038/s41551-025-01373-0
+  -> https://www.nature.com/articles/s41551-025-01373-0
+正在解析: 10.1021/acs.molpharmaceut.4c01437
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c01437
+正在解析: 10.1039/d5nr00433k
+[错误] DOI 10.1039/d5nr00433k 解析失败: HTTPSConnectionPool(host='pubs.rsc.org', port=443): Read timed out. (read timeout=10)
+  -> 解析失败
+正在解析: 10.1039/d5tb00117j
+  -> https://pubs.rsc.org/en/content/articlelanding/2025/tb/d5tb00117j
+正在解析: 10.1016/j.ijpx.2025.100324
+  -> https://linkinghub.elsevier.com/retrieve/pii/S259015672500009X
+正在解析: 10.1016/j.ijpharm.2025.125470
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517325003060
+正在解析: 10.1016/j.jconrel.2025.113617
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925002342
+正在解析: 10.1021/acsnano.4c18345
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c18345
+正在解析: 10.1021/acsnano.4c14098
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c14098
+正在解析: 10.11817/j.issn.1672-7347.2024.230247
+  -> https://xbyxb.csu.edu.cn/zh/article/doi/10.11817/j.issn.1672-7347.2024.230247/
+正在解析: 10.1038/s41467-025-57488-0
+  -> https://www.nature.com/articles/s41467-025-57488-0
+正在解析: 10.1039/d4nr05415f
+  -> https://pubs.rsc.org/en/content/articlelanding/2025/nr/d4nr05415f
+正在解析: 10.1101/2025.02.25.640222
+  -> https://www.biorxiv.org/lookup/doi/10.1101/2025.02.25.640222
+正在解析: 10.1002/advs.202500844
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202500844
+正在解析: 10.1007/s13346-025-01824-w
+  -> https://link.springer.com/article/10.1007/s13346-025-01824-w
+正在解析: 10.1038/s41467-025-57149-2
+  -> https://www.nature.com/articles/s41467-025-57149-2
+正在解析: 10.1021/acsnano.4c14102
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c14102
+正在解析: 10.1021/acs.jpcb.4c07060
+  -> https://pubs.acs.org/doi/10.1021/acs.jpcb.4c07060
+正在解析: 10.1016/j.ejps.2025.107056
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0928098725000557
+正在解析: 10.1016/j.biotechadv.2025.108546
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0734975025000321
+正在解析: 10.1038/s41551-025-01360-5
+  -> https://www.nature.com/articles/s41551-025-01360-5
+正在解析: 10.3390/pharmaceutics17020157
+[错误] DOI 10.3390/pharmaceutics17020157 解析失败: HTTPSConnectionPool(host='www.mdpi.com', port=443): Max retries exceeded with url: /1999-4923/17/2/157 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))
+  -> 解析失败
+正在解析: 10.1021/acsbiomedchemau.4c00085
+[错误] DOI 10.1021/acsbiomedchemau.4c00085 解析失败: HTTPSConnectionPool(host='pubs.acs.org', port=443): Max retries exceeded with url: /doi/10.1021/acsbiomedchemau.4c00085 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)')))
+  -> 解析失败
+正在解析: 10.1021/acsami.4c21289
+  -> https://pubs.acs.org/doi/10.1021/acsami.4c21289
+正在解析: 10.1021/acs.biomac.4c01587
+  -> https://pubs.acs.org/doi/10.1021/acs.biomac.4c01587
+正在解析: 10.1002/advs.202416525
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202416525
+正在解析: 10.1021/acsnano.4c14041
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c14041
+正在解析: 10.1002/advs.202413016
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202413016
+正在解析: 10.1007/s00894-025-06308-9
+  -> https://link.springer.com/article/10.1007/s00894-025-06308-9
+正在解析: 10.1021/acsnano.4c18636
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c18636
+正在解析: 10.1016/j.ijpharm.2025.125297
+[错误] DOI 10.1016/j.ijpharm.2025.125297 解析失败: HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0378517325001334 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)')))
+  -> 解析失败
+正在解析: 10.1021/acsnano.4c09399
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c09399
+正在解析: 10.1016/j.bmc.2025.118080
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0968089625000215
+正在解析: 10.1002/advs.202407383
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202407383
+正在解析: 10.1073/pnas.2409572122
+  -> https://pnas.org/doi/10.1073/pnas.2409572122
+正在解析: 10.1021/acs.molpharmaceut.4c00744
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c00744
+正在解析: 10.1016/j.jconrel.2025.01.071
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365925000811
+正在解析: 10.1016/j.actbio.2025.01.040
+  -> https://linkinghub.elsevier.com/retrieve/pii/S1742706125000492
+正在解析: 10.3390/pharmaceutics17010025
+  -> https://www.mdpi.com/1999-4923/17/1/25
+正在解析: 10.1038/s41467-024-55137-6
+  -> https://www.nature.com/articles/s41467-024-55137-6
+正在解析: 10.3390/vaccines13010025
+  -> https://www.mdpi.com/2076-393X/13/1/25
+正在解析: 10.1016/j.bioactmat.2024.12.032
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2452199X24005693
+正在解析: 10.1016/j.colsurfb.2025.114528
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0927776525000359
+正在解析: 10.1021/acs.molpharmaceut.4c01239
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c01239
+正在解析: 10.1016/j.ijpharm.2025.125240
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517325000766
+正在解析: 10.1016/j.chroma.2025.465663
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0021967325000123
+正在解析: 10.1016/j.ijpharm.2025.125192
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517325000286
+正在解析: 10.1038/s41551-025-01347-2
+  -> https://www.nature.com/articles/s41551-025-01347-2
+正在解析: 10.1021/acs.molpharmaceut.4c00995
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c00995
+正在解析: 10.1021/acsami.4c14203
+  -> https://pubs.acs.org/doi/10.1021/acsami.4c14203
+正在解析: 10.1080/17425247.2025.2452295
+  -> https://www.tandfonline.com/doi/full/10.1080/17425247.2025.2452295
+正在解析: 10.1002/advs.202409729
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202409729
+正在解析: 10.1021/acsami.4c20770
+  -> https://pubs.acs.org/doi/10.1021/acsami.4c20770
+正在解析: 10.3390/pharmaceutics16121521
+  -> https://www.mdpi.com/1999-4923/16/12/1521
+正在解析: 10.1021/acsnano.4c13053
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c13053
+正在解析: 10.1016/j.ijpharm.2024.125114
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517324013486
+正在解析: 10.1021/jacs.4c10265
+  -> https://pubs.acs.org/doi/10.1021/jacs.4c10265
+正在解析: 10.17691/stm2025.17.6.06
+  -> https://www.stm-journal.ru/en/numbers/2025/6/1959
+正在解析: 10.1016/j.ymthe.2024.12.041
+  -> https://linkinghub.elsevier.com/retrieve/pii/S1525001624008414
+正在解析: 10.1038/s41467-024-55072-6
+  -> https://www.nature.com/articles/s41467-024-55072-6
+正在解析: 10.1002/advs.202411032
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202411032
+正在解析: 10.1021/acs.langmuir.4c03704
+  -> https://pubs.acs.org/doi/10.1021/acs.langmuir.4c03704
+正在解析: 10.1016/j.ijpharm.2024.125109
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517324013437
+正在解析: 10.1016/j.ymthe.2024.12.032
+  -> https://linkinghub.elsevier.com/retrieve/pii/S1525001624008311
+正在解析: 10.1021/acs.biomac.4c01599
+  -> https://pubs.acs.org/doi/10.1021/acs.biomac.4c01599
+正在解析: 10.1002/advs.202412303
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202412303
+正在解析: 10.1016/j.jcis.2024.12.032
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0021979724028844
+正在解析: 10.1016/j.apsb.2024.08.032
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2211383524003514
+正在解析: 10.1038/s41586-024-08291-2
+  -> https://www.nature.com/articles/s41586-024-08291-2
+正在解析: 10.1038/s41587-024-02490-y
+  -> https://www.nature.com/articles/s41587-024-02490-y
+正在解析: 10.1021/acs.bioconjchem.4c00536
+  -> https://pubs.acs.org/doi/10.1021/acs.bioconjchem.4c00536
+正在解析: 10.1021/acs.molpharmaceut.4c00426
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c00426
+正在解析: 10.1021/jacs.4c13154
+  -> https://pubs.acs.org/doi/10.1021/jacs.4c13154
+正在解析: 10.1016/j.omtn.2024.102383
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2162253124002701
+正在解析: 10.1002/adfm.202312038
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adfm.202312038
+正在解析: 10.1002/bab.2701
+  -> https://iubmb.onlinelibrary.wiley.com/doi/10.1002/bab.2701
+正在解析: 10.14202/vetworld.2024.2235-2247
+  -> https://www.veterinaryworld.org/Vol.17/October-2024/5.php
+正在解析: 10.1016/j.ejps.2024.106965
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0928098724002781
+正在解析: 10.1038/s41551-024-01296-2
+  -> https://www.nature.com/articles/s41551-024-01296-2
+正在解析: 10.2147/IJN.S474665
+  -> https://www.dovepress.com/combination-of-gene-therapy-and-chemotherapy-in-a-new-targeted-hybrid--peer-reviewed-fulltext-article-IJN
+正在解析: 10.1021/acs.analchem.4c03955
+  -> https://pubs.acs.org/doi/10.1021/acs.analchem.4c03955
+正在解析: 10.1021/acssynbio.4c00487
+  -> https://pubs.acs.org/doi/10.1021/acssynbio.4c00487
+正在解析: 10.3390/jpm14111092
+  -> https://www.mdpi.com/2075-4426/14/11/1092
+正在解析: 10.1021/acs.jmedchem.4c02239
+  -> https://pubs.acs.org/doi/10.1021/acs.jmedchem.4c02239
+正在解析: 10.1021/jacs.4c14500
+  -> https://pubs.acs.org/doi/10.1021/jacs.4c14500
+正在解析: 10.1002/advs.202408744
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202408744
+正在解析: 10.1038/s41551-024-01267-7
+  -> https://www.nature.com/articles/s41551-024-01267-7
+正在解析: 10.1021/acsnano.4c08490
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c08490
+正在解析: 10.1016/j.bioactmat.2024.06.008
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2452199X24002202
+正在解析: 10.1016/j.ijpharm.2024.124942
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517324011761
+正在解析: 10.1016/j.apsb.2024.06.011
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2211383524002429
+正在解析: 10.1021/acs.molpharmaceut.4c00826
+  -> https://pubs.acs.org/doi/10.1021/acs.molpharmaceut.4c00826
+正在解析: 10.1016/j.jconrel.2024.11.007
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365924007521
+正在解析: 10.1016/j.jconrel.2024.11.010
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365924007557
+正在解析: 10.1002/adhm.202403366
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202403366
+正在解析: 10.1186/s12951-024-02919-1
+  -> https://link.springer.com/article/10.1186/s12951-024-02919-1
+正在解析: 10.1128/jvi.01699-24
+  -> https://journals.asm.org/doi/10.1128/jvi.01699-24
+正在解析: 10.1039/d4bm01070a
+[错误] DOI 10.1039/d4bm01070a 解析失败: HTTPSConnectionPool(host='pubs.rsc.org', port=443): Read timed out. (read timeout=10)
+  -> 解析失败
+正在解析: 10.1002/advs.202405406
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202405406
+正在解析: 10.1038/s41565-024-01748-5
+  -> https://www.nature.com/articles/s41565-024-01748-5
+正在解析: 10.1080/03639045.2024.2421198
+  -> https://www.tandfonline.com/doi/full/10.1080/03639045.2024.2421198
+正在解析: 10.3390/vaccines12101148
+  -> https://www.mdpi.com/2076-393X/12/10/1148
+正在解析: 10.1016/j.ijpharm.2024.124868
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0378517324011025
+正在解析: 10.1016/j.jconrel.2024.10.047
+  -> https://linkinghub.elsevier.com/retrieve/pii/S016836592400720X
+正在解析: 10.1002/adhm.202401918
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202401918
+正在解析: 10.1038/s41467-024-53569-8
+  -> https://www.nature.com/articles/s41467-024-53569-8
+正在解析: 10.1016/j.jconrel.2024.10.028
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365924007016
+正在解析: 10.1021/acs.analchem.4c02399
+  -> https://pubs.acs.org/doi/10.1021/acs.analchem.4c02399
+正在解析: 10.1002/advs.202404684
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.202404684
+正在解析: 10.1021/acsnano.4c10154
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c10154
+正在解析: 10.1016/j.jconrel.2024.10.005
+  -> https://linkinghub.elsevier.com/retrieve/pii/S0168365924006680
+正在解析: 10.1016/j.isci.2024.110928
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2589004224021539
+正在解析: 10.1002/anie.202415389
+  -> https://onlinelibrary.wiley.com/doi/10.1002/anie.202415389
+正在解析: 10.1021/acs.nanolett.4c02566
+  -> https://pubs.acs.org/doi/10.1021/acs.nanolett.4c02566
+正在解析: 10.1021/acs.jpcb.4c05057
+  -> https://pubs.acs.org/doi/10.1021/acs.jpcb.4c05057
+正在解析: 10.1002/adhm.202400804
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202400804
+正在解析: 10.1038/s41551-024-01256-w
+  -> https://www.nature.com/articles/s41551-024-01256-w
+正在解析: 10.1002/wnan.1992
+  -> https://wires.onlinelibrary.wiley.com/doi/10.1002/wnan.1992
+正在解析: 10.1038/s41565-024-01747-6
+  -> https://www.nature.com/articles/s41565-024-01747-6
+正在解析: 10.1002/adhm.202400509
+  -> https://advanced.onlinelibrary.wiley.com/doi/10.1002/adhm.202400509
+正在解析: 10.1021/acsnano.4c09677
+  -> https://pubs.acs.org/doi/10.1021/acsnano.4c09677
+正在解析: 10.1016/j.celrep.2024.114788
+  -> https://linkinghub.elsevier.com/retrieve/pii/S2211124724011392
+正在解析: 10.3390/molecules29184409
+  -> https://www.mdpi.com/1420-3049/29/18/4409
+正在解析: 10.1039/d4pm00128a
+  -> https://pubs.rsc.org/en/content/articlelanding/2024/pm/d4pm00128a

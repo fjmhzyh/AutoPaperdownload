@@ -17,8 +17,10 @@
     "USE_SELENIUM": false,
     "DELAY_PAPER": 60,
     "DELAY_SI": 5,
-    "TIMEOUT": 40,
+    "TIMEOUT": 13,
     "CLEAN_THRESHOLD": 47,
     "SEARCH_QUERY": "(PCL) AND (Light curing)"
-  }
+  },
+  "zju_username": "3210103704",
+  "zju_password": "qq1050958929"
 }

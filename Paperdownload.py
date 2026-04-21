@@ -2,6 +2,8 @@ import os
 import re
 import csv
 import time
+import sys
+import subprocess
 import pyautogui
 import pyperclip
 import json
@@ -21,17 +23,108 @@ from parent_guard import start_parent_guard
 from platform_compat import (
     get_browser_process_names,
     get_default_edge_browser_path,
+    get_last_open_url_error,
     hotkey,
     is_windows,
     open_url,
-    resource_path,
 )
 from runtime_config import load_runtime_config
-from runtime_paths import bundle_path, data_path, ensure_runtime_layout, get_bundle_dir, get_data_dir
+from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir, get_data_dir
+from publisher import (
+    LegacyLoginFallback,
+    LoginContext,
+    normalize_domain,
+    resolve_handler,
+)
 
 ensure_runtime_layout()
 _BUNDLE_DIR = get_bundle_dir()
 _DATA_DIR = get_data_dir()
+
+
+def _resolve_yanzhen_script_path() -> Optional[str]:
+    """解析验证码助手脚本路径（优先 photos/yanzhen.py）。"""
+    candidates = [
+        os.path.join(_BUNDLE_DIR, "photos", "yanzhen.py"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "photos", "yanzhen.py"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "yanzhen.py"),
+        data_path("photos", "yanzhen.py"),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _build_yanzhen_command(script_path: str) -> Optional[List[str]]:
+    """构建验证码助手启动命令。"""
+    if not script_path:
+        return None
+    if not getattr(sys, "frozen", False):
+        return [sys.executable, script_path]
+
+    worker_candidates = [
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker", "yanzhen_worker"),
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker.exe"),
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker", "yanzhen_worker"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker.exe"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker"),
+    ]
+    for worker in worker_candidates:
+        if os.path.isfile(worker):
+            return [worker]
+
+    python_cmd = shutil.which("python3") or shutil.which("python")
+    if python_cmd:
+        return [python_cmd, script_path]
+    return None
+
+
+def _start_yanzhen_helper() -> Optional[subprocess.Popen]:
+    """启动验证码助手子进程。"""
+    script_path = _resolve_yanzhen_script_path()
+    if not script_path:
+        print("[验证码助手] 未找到脚本 photos/yanzhen.py，跳过启动")
+        return None
+
+    command = _build_yanzhen_command(script_path)
+    if not command:
+        print("[验证码助手] 未找到可用启动命令，跳过启动")
+        return None
+
+    try:
+        proc = subprocess.Popen(
+            command,
+            cwd=os.path.dirname(script_path),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path}")
+        return proc
+    except Exception as e:
+        print(f"[验证码助手] 启动失败: {e}")
+        return None
+
+
+def _stop_yanzhen_helper(proc: Optional[subprocess.Popen]) -> None:
+    """关闭验证码助手子进程。"""
+    if not proc:
+        return
+    try:
+        if proc.poll() is not None:
+            print(f"[验证码助手] 已结束 PID={proc.pid}")
+            return
+        proc.terminate()
+        proc.wait(timeout=3)
+        print(f"[验证码助手] 已停止 PID={proc.pid}")
+    except Exception:
+        try:
+            proc.kill()
+            print(f"[验证码助手] 已强制停止 PID={proc.pid}")
+        except Exception as e:
+            print(f"[验证码助手] 停止失败 PID={proc.pid}: {e}")
 
 
 def _default_watch_dirs() -> List[str]:
@@ -64,7 +157,7 @@ class Config:
     EDGE_BROWSER_PATH = get_default_edge_browser_path()
     USE_SELENIUM = False  # 是否使用Selenium方案
     DELAY_BETWEEN_PAPERS = 60  # 每篇论文间隔时间(秒)
-    PAGE_LOAD_TIMEOUT = 40  # 页面加载超时时间(秒)
+    PAGE_LOAD_TIMEOUT = 15  # 页面加载超时时间(秒)
     DOCUMENT_EXTENSIONS = ["pdf"]  # 支持的文档扩展名
     PAPER_DOWNLOAD_FOLDER = data_path("Paper")  # Paper下载文件夹
     EXTRA_WATCH_DIRS = _default_watch_dirs()  # 额外监听下载目录（Windows/mac常见下载目录）
@@ -505,6 +598,8 @@ class WebScraper:
         self.use_selenium = use_selenium
         self.screen_width, self.screen_height = pyautogui.size()
         self.driver = None  # Selenium驱动实例
+        self.anchor_tab_ready = False
+        self.work_tab_open = False
         
     def __del__(self):
         """析构函数，确保关闭浏览器"""
@@ -516,19 +611,225 @@ class WebScraper:
        
         return self._fetch_html_with_pyautogui(doi)
 
+    def _ensure_anchor_page(self) -> str:
+        """创建并返回项目介绍锚点页（mac/win统一使用）"""
+        anchor_path = data_path("browser_anchor_intro.html")
+        if not os.path.exists(anchor_path):
+            try:
+                with open(anchor_path, "w", encoding="utf-8") as f:
+                    f.write(
+                        """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoPaperdownload 工作锚点页</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+      background: linear-gradient(135deg, #f6f9ff 0%, #eef8f2 100%);
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .card {
+      max-width: 760px;
+      width: 100%;
+      background: #ffffffcc;
+      backdrop-filter: blur(2px);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+      color: #0f172a;
+    }
+    p {
+      margin: 10px 0;
+      line-height: 1.8;
+      color: #334155;
+    }
+    .tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0c4a6e;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    ul {
+      margin: 10px 0 0 20px;
+      color: #475569;
+      line-height: 1.7;
+    }
+    code {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 2px 6px;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <h1>AutoPaperdownload</h1>
+    <p>这是自动文献处理程序的工作锚点页。</p>
+    <p>程序运行期间会保持本页常驻，用于稳定浏览器会话，减少频繁打开/关闭窗口造成的失败。</p>
+    <span class="tag">Session Anchor</span>
+    <ul>
+      <li>DOI 解析、登录、HTML 抓取和下载会在新标签页执行。</li>
+      <li>每个任务结束后仅关闭工作标签，锚点页始终保留。</li>
+      <li>如需手动验证运行状态，可查看日志目录：<code>log/</code></li>
+    </ul>
+  </section>
+</body>
+</html>
+"""
+                    )
+            except Exception as e:
+                print(f"[浏览器会话] 创建项目介绍锚点页失败: {e}")
+        return anchor_path
+
+    def _anchor_target(self) -> str:
+        return self._ensure_anchor_page()
+
+    def ensure_session_alive(self) -> bool:
+        current = self._get_current_url(allow_about_blank=True, quiet=True)
+        if current:
+            if not self.anchor_tab_ready:
+                print(f"[浏览器会话] 检测到现有会话，当前URL={current}")
+            self.anchor_tab_ready = True
+            return True
+        self.anchor_tab_ready = False
+        return False
+
+    def ensure_anchor_tab(self) -> bool:
+        if self.ensure_session_alive():
+            print("[浏览器会话] 复用已有锚点会话")
+            return True
+
+        anchor_target = self._anchor_target()
+        print(f"[浏览器会话] 创建锚点页: {anchor_target}")
+        for attempt in range(1, 4):
+            if not open_url(anchor_target, browser_path=Config.EDGE_BROWSER_PATH):
+                err = get_last_open_url_error()
+                if err:
+                    print(f"[浏览器会话] 锚点页创建失败 第{attempt}/3次: {err}")
+                else:
+                    print(f"[浏览器会话] 锚点页创建失败 第{attempt}/3次")
+                time.sleep(1)
+                continue
+
+            time.sleep(1.5)
+            current = self._get_current_url(allow_about_blank=True, quiet=True)
+            if current:
+                self.anchor_tab_ready = True
+                self.work_tab_open = False
+                print(f"[浏览器会话] 锚点页创建成功，当前URL={current}")
+                return True
+            print(f"[浏览器会话] 锚点页确认失败 第{attempt}/3次，地址栏不可读")
+            time.sleep(1)
+
+        self.anchor_tab_ready = False
+        print("[浏览器会话] 锚点页创建失败，无法建立浏览器会话")
+        return False
+
+    def open_work_tab_with_url(self, url: str) -> bool:
+        if not self.ensure_anchor_tab():
+            return False
+        try:
+            hotkey("new_tab")
+            time.sleep(0.8)
+            hotkey("focus_address_bar")
+            time.sleep(0.4)
+            hotkey("select_all")
+            pyautogui.press("backspace")
+            pyautogui.write(url, interval=0.01)
+            pyautogui.press("enter")
+            pyautogui.press("enter")
+            self.work_tab_open = True
+            print(f"[浏览器会话] 工作标签已打开: {url}")
+            return True
+        except Exception as e:
+            print(f"[浏览器会话] 工作标签打开失败，回退系统打开: {str(e)}")
+            ok = open_url(url, browser_path=Config.EDGE_BROWSER_PATH)
+            self.work_tab_open = bool(ok)
+            if ok:
+                print(f"[浏览器会话] 回退系统打开成功: {url}")
+            return ok
+
+    def close_work_tab_keep_anchor(self):
+        if not self.work_tab_open:
+            return
+        try:
+            hotkey("close_tab")
+            time.sleep(1)
+            print("[浏览器会话] 已关闭工作标签，保留锚点页")
+        except Exception as e:
+            print(f"[浏览器会话] 关闭工作标签失败: {str(e)}")
+        finally:
+            self.work_tab_open = False
+
     def resolve_final_url_with_pyautogui(self, doi: str) -> Optional[str]:
         """通过PyAutoGUI打开DOI页面并复制地址栏URL作为final_url"""
         print(f"[URL获取] 通过PyAutoGUI打开DOI页面: {doi}")
         try:
-            if not open_url(
-                f"https://doi.org/{doi}",
-                browser_path=Config.EDGE_BROWSER_PATH,
-            ):
-                print("[URL获取错误] 浏览器启动失败")
+            doi_url = f"https://doi.org/{doi}"
+            startup_confirmed = False
+
+            for startup_attempt in range(1, 4):
+                print(f"[URL启动尝试] DOI={doi} 第{startup_attempt}/3次打开工作标签")
+                if not self.ensure_anchor_tab():
+                    print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：锚点会话不可用")
+                    time.sleep(1)
+                    continue
+
+                if not self.open_work_tab_with_url(doi_url):
+                    startup_error = get_last_open_url_error()
+                    if startup_error:
+                        print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：工作标签打开失败，错误={startup_error}")
+                    else:
+                        print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：工作标签打开失败")
+                    time.sleep(1)
+                    continue
+
+                time.sleep(2)
+                startup_url = self._get_current_url()
+                if startup_url:
+                    print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次成功，地址栏URL={startup_url}")
+                    startup_confirmed = True
+                    break
+
+                print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：地址栏URL不可读")
+                self.close_work_tab_keep_anchor()
+                time.sleep(1)
+
+            if not startup_confirmed:
+                print(f"[URL启动失败] DOI={doi} 浏览器启动后地址栏URL连续3次不可读，终止当前DOI")
                 return None
 
             print(f"[URL获取] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
             time.sleep(Config.PAGE_LOAD_TIMEOUT)
+
+            # 调用验证码处理逻辑（检测到则自动点击一次）
+            # try:
+            #     from captcha_verify import try_click_captcha
+            #     try_click_captcha(max_wait_seconds=8.0)
+            # except Exception as captcha_error:
+            #     print(f"[验证码] 调用失败，继续后续流程: {captcha_error}")
 
             final_url = None
             for attempt in range(1, 4):
@@ -544,12 +845,14 @@ class WebScraper:
 
             if not final_url:
                 print("[URL获取错误] 地址栏URL为空或读取失败")
+                self.close_work_tab_keep_anchor()
                 return None
 
             print(f"[URL解析成功] DOI={doi} -> {final_url}")
             return final_url
         except Exception as e:
             print(f"[URL获取错误] PyAutoGUI获取final_url失败: {str(e)}")
+            self.close_work_tab_keep_anchor()
             return None
 
     def _open_url_in_new_tab(self, url: str) -> bool:
@@ -618,7 +921,7 @@ class WebScraper:
             print(f"[PyAutoGUI错误] 浏览器操作失败: {str(e)}")
             return None, None
     
-    def _get_current_url(self) -> Optional[str]:
+    def _get_current_url(self, allow_about_blank: bool = False, quiet: bool = False) -> Optional[str]:
         """获取当前浏览器URL"""
         try:
             pyperclip.copy('')
@@ -630,14 +933,19 @@ class WebScraper:
             time.sleep(2)
             copied = (pyperclip.paste() or "").strip()
             if not copied:
-                print("[PyAutoGUI警告] 剪贴板为空，复制url失败")
+                if not quiet:
+                    print("[PyAutoGUI警告] 剪贴板为空，复制url失败")
                 return None
+            if allow_about_blank and (copied == "about:blank" or copied.startswith("file://")):
+                return copied
             if not (copied.startswith("http://") or copied.startswith("https://")):
-                print(f"[PyAutoGUI警告] url复制错误: {copied}")
+                if not quiet:
+                    print(f"[PyAutoGUI警告] url复制错误: {copied}")
                 return None
             return copied
         except Exception as e:
-            print(f"[PyAutoGUI错误] 获取URL失败: {str(e)}")
+            if not quiet:
+                print(f"[PyAutoGUI错误] 获取URL失败: {str(e)}")
             return None
     
     def _get_page_source(self) -> Optional[str]:
@@ -904,6 +1212,7 @@ class FileDownloader:
         self.settings_manager = settings_manager
         self.last_downloaded_file = None  # 记录最后下载的文件名
         self.domain_click_manager = DomainClickManager()  # 新增的点击位置管理器
+        self.download_tab_opened = False
         os.makedirs(self.download_folder, exist_ok=True)
         
     def download_and_rename(self, doi: str, url: str, domain: str) -> Tuple[bool, Optional[str]]:
@@ -1039,6 +1348,7 @@ class FileDownloader:
     
     def _open_url_in_browser(self, url: str):
         """在浏览器新标签页打开URL"""
+        self.download_tab_opened = False
         try:
             print("[浏览器] 新标签页打开URL...")
             hotkey("new_tab")
@@ -1051,33 +1361,36 @@ class FileDownloader:
             pyautogui.press("enter")
             time.sleep(0.5)
             pyautogui.press("enter")
+            self.download_tab_opened = True
             print(f"[浏览器] 已在新标签页打开URL: {url}")
         except Exception as e:
             print(f"[浏览器警告] 新标签页打开失败，回退系统打开: {str(e)}")
             if not open_url(url, browser_path=Config.EDGE_BROWSER_PATH):
                 print("[浏览器错误] 打开URL失败")
                 return
+            self.download_tab_opened = True
             print(f"[浏览器] 已回退系统方式打开URL: {url}")
     
     def _cleanup_after_download(self):
-        """下载完成后清理浏览器"""
+        """下载完成后清理下载工作标签（保留锚点页）"""
         try:
-            print("[清理] 正在关闭浏览器标签页和进程...")
-            
-            # 关闭所有浏览器标签页
-            for i in range(3):
+            print("[浏览器会话] 关闭下载工作标签，保留锚点页")
+            if not self.download_tab_opened:
+                print("[浏览器会话] 本轮未打开下载标签，跳过关闭操作")
+                return
+            for i in range(2):
                 try:
                     hotkey("close_tab")
                     time.sleep(1)
+                    print(f"[浏览器会话] 下载标签关闭完成(尝试{i + 1}/2)")
+                    break
                 except Exception as e:
-                    print(f"[清理警告] 关闭标签页失败: {str(e)}")
-            
-            # 关闭所有浏览器进程
-            ProcessManager.kill_browser_processes()
-            
-            print("[清理] 清理完成")
+                    print(f"[浏览器会话] 关闭下载标签失败(尝试{i + 1}/2): {str(e)}")
+            print("[清理] 下载阶段清理完成（浏览器保持打开）")
         except Exception as e:
             print(f"[清理错误] 清理过程中出错: {str(e)}")
+        finally:
+            self.download_tab_opened = False
     
     def _simulate_save(self, domain: str = None,doi: str = None):
         """模拟保存文件操作，支持根据域名调整点击位置"""
@@ -1097,9 +1410,28 @@ class FileDownloader:
             time.sleep(5)
             pyautogui.press('enter')
             time.sleep(5)
-            # 直接输入完整保存路径，尽量强制保存到项目Paper目录
-            save_target = os.path.join(self.download_folder, doi + "_pdf")
-            pyautogui.write(save_target, interval=0.03)
+
+            save_name = doi + "_pdf.pdf"
+            if is_windows():
+                # Windows保持原有路径输入逻辑
+                save_target = os.path.join(self.download_folder, save_name)
+                pyautogui.write(save_target, interval=0.03)
+            else:
+                # mac: 使用“前往文件夹 + 粘贴”避免输入法把路径字符改写
+                save_dir = os.path.abspath(self.download_folder)
+                print(f"[下载保存] mac路径跳转目录: {save_dir}")
+                pyperclip.copy(save_dir)
+                hotkey("go_to_folder")
+                time.sleep(0.8)
+                hotkey("paste")
+                time.sleep(0.3)
+                pyautogui.press("enter")
+                time.sleep(0.8)
+                pyperclip.copy(save_name)
+                hotkey("select_all")
+                time.sleep(0.2)
+                hotkey("paste")
+                print(f"[下载保存] mac文件名: {save_name}")
             time.sleep(2)
             pyautogui.press('enter')
             time.sleep(2)
@@ -1252,14 +1584,13 @@ class BrowserController:
 
 class LoginManager:
     """登录管理类"""
+
     def __init__(self, json_path: str):
         self.json_path = json_path
-        self.login_domains = set()  # 存储需要登录的域名
+        self.login_domains = set()
+        self.login_context = LoginContext(base_dir=_BUNDLE_DIR)
+        self.legacy_fallback = LegacyLoginFallback()
 
-    @staticmethod
-    def _photo_path(filename: str) -> str:
-        return resource_path("photos", filename, base_dir=_BUNDLE_DIR)
-        
     def load_config(self):
         """加载登录配置"""
         try:
@@ -1267,665 +1598,84 @@ class LoginManager:
                 print(f"[登录配置] 配置文件不存在，将创建默认配置: {self.json_path}")
                 self._create_default_config()
                 return
-                
+
             with open(self.json_path, 'r', encoding='utf-8-sig') as f:
                 domains = json.load(f)
-                self.login_domains = set(domains)
+                normalized = [normalize_domain(item) for item in domains]
+                self.login_domains = {item for item in normalized if item}
                 print(f"[登录配置] 已加载 {len(self.login_domains)} 个需要登录的域名")
         except Exception as e:
             print(f"[登录配置错误] 配置文件读取失败: {str(e)}")
-    
+
     def _create_default_config(self):
         """创建默认的登录配置"""
         default_domains = [
             "pubs.acs.org",
+            "sciencedirect.com",
             "link.springer.com",
             "tandfonline.com",
             "advanced.onlinelibrary.wiley.com",
+            "onlinelibrary.wiley.com",
             "aiche.onlinelibrary.wiley.com",
+            "analyticalsciencejournals.onlinelibrary.wiley.com",
             "iopscience.iop.org",
             "ieeexplore.ieee.org",
             "karger.com",
             "pubs.rsc.org",
-            "analyticalsciencejournals.onlinelibrary.wiley.com"
         ]
         try:
             with open(self.json_path, 'w', encoding='utf-8-sig') as f:
                 json.dump(default_domains, f, indent=2)
             print(f"[登录配置] 已创建默认配置文件: {self.json_path}")
+            self.login_domains = set(default_domains)
         except Exception as e:
             print(f"[登录配置错误] 创建配置文件失败: {str(e)}")
-    
+
     def needs_login(self, domain: str) -> bool:
         """检查指定域名是否需要登录"""
-        # 尝试直接匹配完整域名
-        if domain in self.login_domains:
+        normalized = normalize_domain(domain)
+        if normalized in self.login_domains:
             return True
-        
-        # 尝试匹配主域名（去掉子域名部分）
-        parts = domain.split('.')
+
+        parts = normalized.split('.')
         if len(parts) >= 2:
-            main_domain = parts[-2] + '.' + parts[-1]
+            main_domain = '.'.join(parts[-2:])
             if main_domain in self.login_domains:
                 return True
-        
+
         return False
-    
-    def perform_login(self, domain: str):
-        """执行登录操作"""
+
+    def perform_login(self, domain: str) -> bool:
+        """执行登录操作（插件路由 + legacy兜底）"""
         if not self.needs_login(domain):
-            return
-            
-        print(f"[登录] 开始为域名 {domain} 执行登录操作")
-        
-        # 根据域名调用对应的登录函数
-        login_func_name = f"_login_{domain.replace('.', '_')}"
-        login_func = getattr(self, login_func_name, None)
-        
-        if login_func:
-            login_func()
-        else:
-            print(f"[登录错误] 域名 {domain} 没有对应的登录函数")
-    
-    def _locate_image_on_screen(self, image_path: str) -> Optional[Tuple[int, int]]:
-        """在屏幕上定位图像位置"""
-        try:
-            if not os.path.exists(image_path):
-                print(f"[图像识别警告] 图像文件不存在: {image_path}")
-                return None
-                
-            # 使用pyautogui的locateOnScreen函数
-            location = pyautogui.locateOnScreen(image_path, confidence=0.9)
-            if location:
-                center_x = location.left + location.width // 2
-                center_y = location.top + location.height // 2
-                return (center_x, center_y)
-            return None
-        except Exception as e:
-            return None
-    
-    def _click_image(self, position: Tuple[int, int]):
-        """点击指定位置的图像"""
-        try:
-            x, y = position
-            pyautogui.moveTo(x, y, duration=0.5)
-            pyautogui.click()
-            print(f"[鼠标操作] 已点击位置: ({x}, {y})")
-        except Exception as e:
-            print(f"[鼠标操作错误] 点击失败: {str(e)}")
-    
-    def _scroll_until_image_found(self, image_path: str, max_scrolls: int = 5) -> bool:
-        """滚动页面直到找到指定图像"""
-        scroll_step = 900  # 每次滚动像素数
-        scroll_delay = 1   # 滚动间隔时间(秒)
-        
-        for attampt in range(max_scrolls):
-            # 尝试查找图像
-            pos = self._locate_image_on_screen(image_path)
-            if pos:
-                self._click_image(pos)
-                return True
-                
-            # 向下滚动页面
-            pyautogui.scroll(-scroll_step)
-            time.sleep(scroll_delay)
-            
-            # 打印进度
-            print(f"[滚动检测] 已滚动 {attampt+1}/{max_scrolls} 次...")
-        
-        return False
+            print(f"[登录结果] domain={domain} -> Skipped(无需登录)")
+            return True
 
-    def _enhanced_locate_image(self, image_path: str, scroll_retry: bool = True) -> Optional[Tuple[int, int]]:
-        """增强版图像定位，支持滚动重试"""
-        # 初始尝试
-        pos = self._locate_image_on_screen(image_path)
-        if pos:
-            return pos
-            
-        # 如果需要滚动重试
-        if scroll_retry:
-            print("[图像识别] 初始查找失败，尝试滚动页面...")
-            if self._scroll_until_image_found(image_path):
-                return self._locate_image_on_screen(image_path)
-                
-        return None
-    def _login_pubs_acs_org(self):
-        """ACS Publications登录 - 通过图像识别登录按钮"""
-        # 1. 定义本地存储的登录按钮图像路径
-        login_button_image = self._photo_path("pubs.acs.org1.png")
-        # 2. 尝试在屏幕上查找登录按钮
+        normalized = normalize_domain(domain)
         try:
-            print("[图像识别] 正在查找登录按钮...")
-            button_pos = self._locate_image_on_screen(login_button_image)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮，位置: {button_pos}")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)  # 等待页面
-            else:
-                print("[图像识别] 未找到登录按钮，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
+            handler = resolve_handler(normalized)
+            if handler:
+                print(f"[登录路由] {normalized} -> {handler.handler_name}")
+                print(f"[登录执行] handler={handler.handler_name} domain={normalized}")
+                result = bool(handler.login(normalized, self.login_context))
+                print(f"[登录结果] domain={normalized} -> {'Success' if result else 'Failed'}")
+                return result
 
-    def _login_sciencedirect_com(self):
-        """ACS Publications登录 - 通过图像识别登录按钮"""
-        # 1. 定义本地存储的登录按钮图像路径
-        login_button_image = self._photo_path("sciencedirect.com1.png")
-        pyautogui.click(700, 1000)  # 点击登录按钮位置
-        # 2. 尝试在屏幕上查找登录按钮
-        try:
-            print("[图像识别] 正在查找登录按钮...")
-            button_pos = self._locate_image_on_screen(login_button_image)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮，位置: {button_pos}")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)  # 等待页面加载
-
-            else:
-                print("[图像识别] 未找到登录按钮，尝试直接下载")
+            print(f"[登录路由] {normalized} -> 未命中")
+            print(f"[登录兜底] 使用legacy逻辑")
+            result = bool(self.legacy_fallback.perform_login(normalized, self.login_context))
+            print(f"[登录结果] domain={normalized} -> {'Success' if result else 'Failed'}")
+            return result
         except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-    
-    def _login_link_springer_com(self):
-        """Springer登录"""
-        print("[登录] 执行Springer登录流程")
-        # 1. 定义本地存储的登录按钮图像路径
-        login_button_img = self._photo_path("link.springer.com1.png")
-        institution_input_img = self._photo_path("link.springer.com3.png")
-        select_institution_img = self._photo_path("link.springer.com2.png")
-        try:
-             # 配置参数
-            scroll_step = 900  # 每次滚动像素数
-            scroll_delay = 1   # 滚动间隔时间(秒)
-            max_scroll_attempts = 60 # 最大滚动尝试次数
-            # 先尝试不滚动直接查找
-            if self._locate_image_on_screen(login_button_img):
-                button_pos = self._locate_image_on_screen(login_button_img)
-                print("[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(5)
-            else:
-                print("[滚动检测] 开始滚动查找登录按钮...")
-                for attempt in range(max_scroll_attempts):
-                    # 向下滚动页面
-                    pyautogui.scroll(-scroll_step)
-                    time.sleep(scroll_delay)
-            
-                    # 检查是否找到登录按钮
-                    if self._locate_image_on_screen(login_button_img):
-                        button_pos = self._locate_image_on_screen(login_button_img)
-                        print("[图像识别] 找到登录按钮1")
-                        # 3. 点击登录按钮
-                        self._click_image(button_pos)
-                        print("[登录] 已点击登录按钮1")
-                        time.sleep(5)  # 等待登录完成
-                        break
-        
-        
-            # 3. 查找并点击机构输入框
-            print("[图像识别] 正在查找机构输入框...")
-            input_pos = self._locate_image_on_screen(institution_input_img)
-        
-            if input_pos:
-                print(f"[图像识别] 找到机构输入框，位置: {input_pos}")
-                self._click_image(input_pos)
-                print("[登录] 已点击机构输入框")
-                time.sleep(20)
-            
-                # 4. 输入机构名称
-                print("[键盘输入] 输入机构名称: Zhejiang")
-                pyautogui.write("Zhejiang", interval=0.1)
-                time.sleep(1)
-                # 5. 滚动页面查找机构
-                print("[滚动页面] 开始滚动查找机构...")
-                scroll_step = 300  # 每次滚动像素数
-                scroll_delay = 1   # 滚动间隔时间(秒)
-                max_scroll_attempts = 20  # 最大滚动尝试次数
-                
-                for attempt in range(max_scroll_attempts):
-                    # 尝试查找机构选择按钮
-                    select_pos = self._locate_image_on_screen(select_institution_img)
-                    if select_pos:
-                        print(f"[图像识别] 找到机构选择按钮，位置: {select_pos}")
-                        self._click_image(select_pos)
-                        print("[登录] 已选择机构")
-                        time.sleep(10)  # 等待登录完成
-                        pyautogui.press('enter')  # 确保登录成功
-                        time.sleep(10)  # 等待页面
-                        return True
-                    # 向下滚动页面
-                    pyautogui.scroll(-scroll_step)
-                    time.sleep(scroll_delay)
-                    print(f"[滚动页面] 已滚动 {attempt+1}/{max_scroll_attempts} 次...")
-                
-                
-                else:
-                    print("[图像识别] 未找到搜索按钮")
-                    return False
-            else:
-                print("[图像识别] 未找到机构输入框")
-                return False
-            
-        except Exception as e:
-            print(f"[登录错误] Springer登录失败: {str(e)}")
-            return False
-    
-    def _login_tandfonline_com(self):
-        """Taylor & Francis登录"""
-        print("[登录] 执行Taylor & Francis登录流程")
-        # 1. 定义本地存储的登录按钮图像路径
-        login_button_img = self._photo_path("tandfonline.com1.png")
-        institution_input_img = self._photo_path("tandfonline.com2.png")
-        select_institution_img = self._photo_path("tandfonline.com3.png")
-        try:
-             # 配置参数
-            scroll_step = 900  # 每次滚动像素数
-            scroll_delay = 1   # 滚动间隔时间(秒)
-            max_scroll_attempts = 60 # 最大滚动尝试次数
-            # 先尝试不滚动直接查找
-            if self._locate_image_on_screen(login_button_img):
-                button_pos = self._locate_image_on_screen(login_button_img)
-                print("[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(5)
-            else:
-                print("[滚动检测] 开始滚动查找登录按钮...")
-                for attempt in range(max_scroll_attempts):
-                    # 向下滚动页面
-                    pyautogui.scroll(-scroll_step)
-                    time.sleep(scroll_delay)
-            
-                    # 检查是否找到登录按钮
-                    if self._locate_image_on_screen(login_button_img):
-                        button_pos = self._locate_image_on_screen(login_button_img)
-                        print("[图像识别] 找到登录按钮1")
-                        # 3. 点击登录按钮
-                        self._click_image(button_pos)
-                        print("[登录] 已点击登录按钮1")
-                        time.sleep(5)  # 等待登录完成
-                        break
-        
-        
-            # 3. 查找并点击机构输入框
-            print("[图像识别] 正在查找机构输入框...")
-            input_pos = self._locate_image_on_screen(institution_input_img)
-        
-            if input_pos:
-                print(f"[图像识别] 找到机构输入框，位置: {input_pos}")
-                self._click_image(input_pos)
-                print("[登录] 已点击机构输入框")
-                time.sleep(20)
-            
-                # 4. 输入机构名称
-                print("[键盘输入] 输入机构名称: Zhejiang")
-                pyautogui.write("Zhejiang", interval=0.1)
-                time.sleep(1)
-                # 5. 滚动页面查找机构
-                print("[滚动页面] 开始滚动查找机构...")
-                scroll_step = 300  # 每次滚动像素数
-                scroll_delay = 1   # 滚动间隔时间(秒)
-                max_scroll_attempts = 20  # 最大滚动尝试次数
-                
-                for attempt in range(max_scroll_attempts):
-                    # 尝试查找机构选择按钮
-                    select_pos = self._locate_image_on_screen(select_institution_img)
-                    if select_pos:
-                        print(f"[图像识别] 找到机构选择按钮，位置: {select_pos}")
-                        self._click_image(select_pos)
-                        print("[登录] 已选择机构")
-                        time.sleep(10)  # 等待登录完成
-                        pyautogui.press('enter')  # 确保登录成功
-                        time.sleep(10)  # 等待页面
-                        return True
-                    # 向下滚动页面
-                    pyautogui.scroll(-scroll_step)
-                    time.sleep(scroll_delay)
-                    print(f"[滚动页面] 已滚动 {attempt+1}/{max_scroll_attempts} 次...")
-                
-                
-                else:
-                    print("[图像识别] 未找到搜索按钮")
-                    return False
-            else:
-                print("[图像识别] 未找到机构输入框")
-                return False
-            
-        except Exception as e:
-            print(f"[登录错误] Springer登录失败: {str(e)}")
-            return False
-        
-    
-    def _login_advanced_onlinelibrary_wiley_com(self):
-        """Wiley Advanced 图像识别登录流程"""
-        print("[登录] 执行Wiley Advanced图像识别登录流程")
-        
-        # 定义本地存储的图像路径
-        login_button_img = self._photo_path("advanced.onlinelibrary.wiley.com1.png")
-        submit_button_img = self._photo_path("advanced.onlinelibrary.wiley.com2.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(login_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(20)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)  # 等待页面加载
-            else:
-                print("[图像识别] 未找到登录按钮2")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        
-    def _login_onlinelibrary_wiley_com(self):
-        """Wiley Advanced 图像识别登录流程"""
-        print("[登录] 执行Wiley Advanced图像识别登录流程")
-        
-        # 定义本地存储的图像路径
-        login_button_img = self._photo_path("advanced.onlinelibrary.wiley.com1.png")
-        submit_button_img = self._photo_path("advanced.onlinelibrary.wiley.com2.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(login_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(20)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')
-                time.sleep(10)  # 等待页面加载
-            else:
-                print("[图像识别] 未找到登录按钮2")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-
-
-    #def _login_aiche_onlinelibrary_wiley_com(self):
-        #"""AIChE Wiley登录"""
-        #print("[登录] 执行AIChE Wiley登录流程")
-        # 具体登录操作待实现
-    
-    def _login_analyticalsciencejournals_onlinelibrary_wiley_com(self):
-        """Wiley Analytical Science Journals登录"""
-        print("[登录] 执行Wiley Analytical Science Journals登录流程")
-        # 定义本地存储的图像路径
-        login_button_img = self._photo_path("advanced.onlinelibrary.wiley.com1.png")
-        submit_button_img = self._photo_path("advanced.onlinelibrary.wiley.com2.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(login_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(20)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)
-            else:
-                print("[图像识别] 未找到登录按钮2")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-    
-    def _login_iopscience_iop_org(self):
-        """IOP Science登录"""
-        print("[登录] 执行IOP Science登录流程")
-        # 配置参数
-        scroll_step = 300  # 每次滚动像素数
-        scroll_delay = 1   # 滚动间隔时间(秒)
-        max_scroll_attempts = 60 # 最大滚动尝试次数
-        login_button_img = self._photo_path("iopscience.iop.org1.png")
-        button_img = self._photo_path("iopscience.iop.org2.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(20)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        
-        print("[滚动检测] 开始滚动查找登录按钮...")
-        for attempt in range(max_scroll_attempts):
-            # 向下滚动页面
-            pyautogui.scroll(-scroll_step)
-            time.sleep(scroll_delay)
-            
-            # 检查是否找到登录按钮
-            if self._locate_image_on_screen(login_button_img):
-                button_pos = self._locate_image_on_screen(login_button_img)
-                print("[图像识别] 找到登录按钮")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(20)  # 等待页面加载  
-                break
-            
-        print("[滚动检测] 达到最大滚动次数仍未找到按钮")
-        return False
-
-    def _login_ieeexplore_ieee_org(self):
-        """IEEE Xplore登录"""
-        print("[登录] 执行IEEE Xplore登录流程")
-       # 定义本地存储的图像路径
-        login_button_img = self._photo_path("ieeexplore.ieee.org1.png")
-        submit_button_img = self._photo_path("ieeexplore.ieee.org2.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(login_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(20)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(10)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)  # 等待页面加载
-            else:
-                print("[图像识别] 未找到登录按钮2")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-    
-    def _login_karger_com(self):
-        """Karger登录"""
-        print("[登录] 执行Karger登录流程")
-        # 定义本地存储的图像路径
-        login_button_img = self._photo_path("karger.com1.png")
-        submit_button_img = self._photo_path("karger.com2.png")
-        try:
-            # 配置参数
-            scroll_step = 900  # 每次滚动像素数
-            scroll_delay = 1   # 滚动间隔时间(秒)
-            max_scroll_attempts = 60 # 最大滚动尝试次数
-            # 先尝试不滚动直接查找
-            if self._locate_image_on_screen(login_button_img):
-                return True
-        
-            print("[滚动检测] 开始滚动查找登录按钮...")
-            for attempt in range(max_scroll_attempts):
-                # 向下滚动页面
-                pyautogui.scroll(-scroll_step)
-                time.sleep(scroll_delay)
-            
-                # 检查是否找到登录按钮
-                if self._locate_image_on_screen(login_button_img):
-                    button_pos = self._locate_image_on_screen(login_button_img)
-                    print("[图像识别] 找到登录按钮1")
-                    # 3. 点击登录按钮
-                    self._click_image(button_pos)
-                    print("[登录] 已点击登录按钮1")
-                    time.sleep(5)  # 等待登录完成
-                    break
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(5)  # 等待登录完成
-                pyautogui.press('enter')  # 确保登录成功
-                time.sleep(10)  # 等待页面加载  
-            else:
-                print("[图像识别] 未找到登录按钮2")
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-    
-    def _login_pubs_rsc_org(self):
-        """RSC Publications登录"""
-        print("[登录] 执行RSC Publications登录流程")
-        # 定义本地存储的图像路径
-        login_button_img = self._photo_path("pubs.rsc.org1.png")
-        submit_button_img = self._photo_path("pubs.rsc.org2.png")
-        button_img = self._photo_path("pubs.rsc.org3.png")
-        try:
-            print("[图像识别] 正在查找登录按钮1...")
-            button_pos = self._locate_image_on_screen(login_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮1")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮1")
-                time.sleep(30)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮1，尝试直接下载")
-                return False
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        # 继续执行登录流程
-        try:
-            print("[图像识别] 正在查找登录按钮2...")
-            button_pos = self._locate_image_on_screen(submit_button_img)
-            
-            if button_pos:
-                print(f"[图像识别] 找到登录按钮2")
-                # 3. 点击登录按钮
-                self._click_image(button_pos)
-                print("[登录] 已点击登录按钮2")
-                time.sleep(10)  # 等待登录完成
-            else:
-                print("[图像识别] 未找到登录按钮2")
-                return False
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-        try:
-            # 配置参数
-            scroll_step = 900  # 每次滚动像素数
-            scroll_delay = 1   # 滚动间隔时间(秒)
-            max_scroll_attempts = 120 # 最大滚动尝试次数
-            # 先尝试不滚动直接查找
-            print("[滚动检测] 开始滚动查找登录按钮...")
-            for attempt in range(max_scroll_attempts):
-                # 向下滚动页面
-                pyautogui.scroll(-scroll_step)
-                time.sleep(scroll_delay)
-            
-                # 检查是否找到登录按钮
-                if self._locate_image_on_screen(button_img):
-                    button_pos = self._locate_image_on_screen(button_img)
-                    print("[图像识别] 找到登录按钮3")
-                    # 3. 点击登录按钮
-                    self._click_image(button_pos)
-                    print("[登录] 已点击登录按钮3")
-                    time.sleep(5)  # 等待登录完成
-                    break
-        except Exception as e:
-            print(f"[登录错误] 图像识别失败: {str(e)}")
-    
+            print(f"[登录错误] handler执行异常: domain={normalized}, error={e}")
+            print(f"[登录兜底] 使用legacy逻辑")
+            try:
+                result = bool(self.legacy_fallback.perform_login(normalized, self.login_context))
+            except Exception as fallback_error:
+                print(f"[登录错误] legacy执行异常: domain={normalized}, error={fallback_error}")
+                result = False
+            print(f"[登录结果] domain={normalized} -> {'Success' if result else 'Failed'}")
+            return result
 
 
 class PaperProcessor:
@@ -2022,53 +1772,55 @@ class PaperProcessor:
         if not doi:
             print("[跳过] 无DOI，跳过处理")
             return False
-
-        # 阶段1: 通过PyAutoGUI获取最终URL并提取域名
-        final_url = self._get_final_url(doi)
-        if not final_url:
-            return False
+        try:
+            # 阶段1: 通过PyAutoGUI获取最终URL并提取域名
+            final_url = self._get_final_url(doi)
+            if not final_url:
+                return False
+                
+            domain = FileHandler.extract_main_domain(final_url)
             
-        domain = FileHandler.extract_main_domain(final_url)
-        
-        # 阶段2: 在当前已打开页面执行登录检查（不关闭当前页）
-        if domain and self.login_manager.needs_login(domain):
-            print(f"[登录] 检测到需要登录的域名: {domain}")
-            self.login_manager.perform_login(domain)
-            time.sleep(5)  # 等待登录完成
+            # 阶段2: 在当前已打开页面执行登录检查（不关闭当前页）
+            if domain and self.login_manager.needs_login(domain):
+                print(f"[登录] 检测到需要登录的域名: {domain}")
+                self.login_manager.perform_login(domain)
+                time.sleep(10)  # 等待登录完成
+                
+            # 阶段3: 新开标签页获取并保存HTML内容（抓取后仅关闭该标签页）
+            html = self._get_html_content(final_url)
+            if not html:
+                return False
+                
+            file_path = self._save_html(html, final_url, paper_id, doi)
+            if not file_path:
+                return False
             
-        # 阶段3: 新开标签页获取并保存HTML内容（抓取后仅关闭该标签页）
-        html = self._get_html_content(final_url)
-        if not html:
-            return False
-            
-        file_path = self._save_html(html, final_url, paper_id, doi)
-        if not file_path:
-            return False
-        
-        self.csv_manager.update_row_by_doi(doi, {'HTMLFile': file_path})
-            
-        # 检查是否需要使用新分支
-        use_new_branch = False
-        if domain:
-            # 获取域名的direct值
-            direct_value = self.domain_branch_manager.get_domain_direct_value(domain)
-            print(f"[域名分支] 域名: {domain}, direct值: {direct_value}")
-            
-            # 如果direct值为1，使用新分支
-            if direct_value == "1":
-                print("[域名分支] 进入新分支处理流程")
-                use_new_branch = True
+            self.csv_manager.update_row_by_doi(doi, {'HTMLFile': file_path})
+                
+            # 检查是否需要使用新分支
+            use_new_branch = False
+            if domain:
+                # 获取域名的direct值
+                direct_value = self.domain_branch_manager.get_domain_direct_value(domain)
+                print(f"[域名分支] 域名: {domain}, direct值: {direct_value}")
+                
+                # 如果direct值为1，使用新分支
+                if direct_value == "1":
+                    print("[域名分支] 进入新分支处理流程")
+                    use_new_branch = True
+                else:
+                    print("[域名分支] 进入原有处理流程")
             else:
-                print("[域名分支] 进入原有处理流程")
-        else:
-            print("[域名分支] 未获取到域名，使用原有处理流程")
-        
-        if use_new_branch:
-            # 新分支处理
-            return self._process_new_branch(doi, domain, final_url, file_path)
-        else:
-            # 原有处理流程
-            return self._process_normal_branch(doi, file_path, final_url, domain)
+                print("[域名分支] 未获取到域名，使用原有处理流程")
+            
+            if use_new_branch:
+                # 新分支处理
+                return self._process_new_branch(doi, domain, final_url, file_path)
+            else:
+                # 原有处理流程
+                return self._process_normal_branch(doi, file_path, final_url, domain)
+        finally:
+            self.web_scraper.close_work_tab_keep_anchor()
     
     def _get_final_url(self, doi: str) -> Optional[str]:
         """获取论文的最终URL"""
@@ -2307,7 +2059,7 @@ def main_entry():
     start_parent_guard()
     Config.apply_runtime_config()
     setup_script_logging(__file__, script_name="Paperdownload")
-    ProcessManager.kill_browser_processes()
+    yanzhen_proc = _start_yanzhen_helper()
     processor = PaperProcessor()
     try:
         processor.run()
@@ -2316,7 +2068,7 @@ def main_entry():
     except Exception as e:
         print(f"[错误] 程序运行出错: {str(e)}")
     finally:
-        ProcessManager.kill_browser_processes()
+        _stop_yanzhen_helper(yanzhen_proc)
 
 
 if __name__ == "__main__":

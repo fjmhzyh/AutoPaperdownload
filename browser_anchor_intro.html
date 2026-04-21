@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoPaperdownload 工作锚点页</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+      background: linear-gradient(135deg, #f6f9ff 0%, #eef8f2 100%);
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .card {
+      max-width: 760px;
+      width: 100%;
+      background: #ffffffcc;
+      backdrop-filter: blur(2px);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      line-height: 1.2;
+      color: #0f172a;
+    }
+    p {
+      margin: 10px 0;
+      line-height: 1.8;
+      color: #334155;
+    }
+    .tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0c4a6e;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    ul {
+      margin: 10px 0 0 20px;
+      color: #475569;
+      line-height: 1.7;
+    }
+    code {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 2px 6px;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <h1>AutoPaperdownload</h1>
+    <p>这是自动文献处理程序的工作锚点页。</p>
+    <p>程序运行期间会保持本页常驻，用于稳定浏览器会话，减少频繁打开/关闭窗口造成的失败。</p>
+    <span class="tag">Session Anchor</span>
+    <ul>
+      <li>DOI 解析、登录、HTML 抓取和下载会在新标签页执行。</li>
+      <li>每个任务结束后仅关闭工作标签，锚点页始终保留。</li>
+      <li>如需手动验证运行状态，可查看日志目录：<code>log/</code></li>
+    </ul>
+  </section>
+</body>
+</html>

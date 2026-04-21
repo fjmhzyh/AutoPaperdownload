@@ -60,7 +60,13 @@ def _normalize_paths(config: Dict[str, Any]) -> Dict[str, Any]:
         expanded = os.path.expanduser(raw.strip())
         if not os.path.isabs(expanded):
             expanded = os.path.join(data_dir, expanded)
-        paths[key] = os.path.abspath(expanded)
+        normalized = os.path.abspath(expanded)
+        if os.name != "nt":
+            normalized = normalized.replace(
+                "/Library/ApplicationSupport/",
+                "/Library/Application Support/",
+            )
+        paths[key] = normalized
     return config
 
 

@@ -2,7 +2,10 @@ import os
 import re
 import csv
 import time
+import sys
+import subprocess
 import pyautogui
+import pyperclip
 from datetime import datetime
 import json
 import random
@@ -22,6 +25,91 @@ from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir
 
 ensure_runtime_layout()
 _BUNDLE_DIR = get_bundle_dir()
+
+
+def _resolve_yanzhen_script_path() -> Optional[str]:
+    """解析验证码助手脚本路径（优先 photos/yanzhen.py）。"""
+    candidates = [
+        os.path.join(_BUNDLE_DIR, "photos", "yanzhen.py"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "photos", "yanzhen.py"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "yanzhen.py"),
+        data_path("photos", "yanzhen.py"),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _build_yanzhen_command(script_path: str) -> Optional[List[str]]:
+    """构建验证码助手启动命令。"""
+    if not script_path:
+        return None
+    if not getattr(sys, "frozen", False):
+        return [sys.executable, script_path]
+
+    worker_candidates = [
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker", "yanzhen_worker"),
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker.exe"),
+        os.path.join(os.path.dirname(sys.executable), "yanzhen_worker"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker", "yanzhen_worker"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker.exe"),
+        os.path.join(_BUNDLE_DIR, "yanzhen_worker"),
+    ]
+    for worker in worker_candidates:
+        if os.path.isfile(worker):
+            return [worker]
+
+    python_cmd = shutil.which("python3") or shutil.which("python")
+    if python_cmd:
+        return [python_cmd, script_path]
+    return None
+
+
+def _start_yanzhen_helper() -> Optional[subprocess.Popen]:
+    """启动验证码助手子进程。"""
+    script_path = _resolve_yanzhen_script_path()
+    if not script_path:
+        print("[验证码助手] 未找到脚本 photos/yanzhen.py，跳过启动")
+        return None
+
+    command = _build_yanzhen_command(script_path)
+    if not command:
+        print("[验证码助手] 未找到可用启动命令，跳过启动")
+        return None
+
+    try:
+        proc = subprocess.Popen(
+            command,
+            cwd=os.path.dirname(script_path),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path}")
+        return proc
+    except Exception as e:
+        print(f"[验证码助手] 启动失败: {e}")
+        return None
+
+
+def _stop_yanzhen_helper(proc: Optional[subprocess.Popen]) -> None:
+    """关闭验证码助手子进程。"""
+    if not proc:
+        return
+    try:
+        if proc.poll() is not None:
+            print(f"[验证码助手] 已结束 PID={proc.pid}")
+            return
+        proc.terminate()
+        proc.wait(timeout=3)
+        print(f"[验证码助手] 已停止 PID={proc.pid}")
+    except Exception:
+        try:
+            proc.kill()
+            print(f"[验证码助手] 已强制停止 PID={proc.pid}")
+        except Exception as e:
+            print(f"[验证码助手] 停止失败 PID={proc.pid}: {e}")
 
 
 def _default_watch_dirs() -> List[str]:
@@ -569,9 +657,26 @@ class PaperProcessor:
                 time.sleep(5)
                 pyautogui.press('enter')
                 time.sleep(5)
-                full_file_path = os.path.join(
-                    CONFIG["SI_DOWNLOAD_FOLDER"], 'doi')
-                pyautogui.write(full_file_path, interval=0.1) 
+
+                save_name = "doi"
+                if is_windows():
+                    full_file_path = os.path.join(CONFIG["SI_DOWNLOAD_FOLDER"], save_name)
+                    pyautogui.write(full_file_path, interval=0.1)
+                else:
+                    save_dir = os.path.abspath(CONFIG["SI_DOWNLOAD_FOLDER"])
+                    print(f"[下载保存] mac路径跳转目录: {save_dir}")
+                    pyperclip.copy(save_dir)
+                    hotkey("go_to_folder")
+                    time.sleep(0.8)
+                    hotkey("paste")
+                    time.sleep(0.3)
+                    pyautogui.press("enter")
+                    time.sleep(0.8)
+                    pyperclip.copy(save_name)
+                    hotkey("select_all")
+                    time.sleep(0.2)
+                    hotkey("paste")
+                    print(f"[下载保存] mac文件名: {save_name}")
                 time.sleep(2)
                 pyautogui.press('enter')
                  
@@ -796,8 +901,12 @@ def main_entry():
     start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="SIdownload")
+    yanzhen_proc = _start_yanzhen_helper()
     processor = PaperProcessor()
-    processor.run()
+    try:
+        processor.run()
+    finally:
+        _stop_yanzhen_helper(yanzhen_proc)
 
 
 if __name__ == "__main__":

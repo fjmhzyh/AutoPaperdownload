@@ -129,6 +129,7 @@ class PaperAutomationConsole:
         self.load_all_configs()
         self._refresh_csv_table()
         self._refresh_all_folders()
+        self._initialize_log_offsets()
 
         self.root.after(200, self._drain_log_queue)
         self.root.after(1000, self._poll_log_files)
@@ -708,6 +709,30 @@ class PaperAutomationConsole:
             return
         self.root.after(200, self._drain_log_queue)
 
+    def _initialize_log_offsets(self):
+        """
+        GUI启动时跳过历史日志内容，仅展示本次会话新增日志。
+        """
+        skipped_files = 0
+        try:
+            if not os.path.isdir(LOG_DIR):
+                return
+
+            for filename in os.listdir(LOG_DIR):
+                if not filename.endswith(".log"):
+                    continue
+                path = os.path.join(LOG_DIR, filename)
+                if not os.path.isfile(path):
+                    continue
+                self.log_file_offsets[path] = os.path.getsize(path)
+                skipped_files += 1
+        except Exception as exc:
+            self._append_log_line("GUI", f"[日志] 初始化日志偏移失败: {exc}")
+            return
+
+        if skipped_files:
+            self._append_log_line("GUI", f"[日志] 已跳过历史日志: {skipped_files} 个文件，仅显示本次新增内容")
+
     def _poll_log_files(self):
         if self.is_closing:
             return
@@ -725,8 +750,7 @@ class PaperAutomationConsole:
 
                 file_size = os.path.getsize(path)
                 if path not in self.log_file_offsets:
-                    mtime = os.path.getmtime(path)
-                    self.log_file_offsets[path] = 0 if mtime >= self.log_start_epoch - 2 else file_size
+                    self.log_file_offsets[path] = 0
 
                 offset = self.log_file_offsets[path]
                 if file_size < offset:

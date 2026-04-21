@@ -144,11 +144,19 @@ bash scripts/build_mac.sh
 ```powershell
 pip install pyinstaller
 powershell -ExecutionPolicy Bypass -File .\scripts\build_win.ps1
+# 若 Inno Setup 不在默认路径，可手动指定：
+powershell -ExecutionPolicy Bypass -File .\scripts\build_win.ps1 -IsccPath "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 ```
 
 - 产物：
   - `release/win/AutoPaperdownload-Setup-<version>-win64.exe`（安装包，需本机已安装 Inno Setup）
   - 若未安装 Inno Setup，则至少产出 `dist/AutoPaperdownload/` 可分发目录
+- 说明：
+  - 脚本会自动从参数、`ISCC_PATH` 环境变量、PATH、常见目录、注册表中查找 `ISCC.exe`
+  - 若最终未找到 `ISCC.exe`，只会生成 `dist/AutoPaperdownload/`，不会生成 `release/win` 安装包
+  - 快速排查命令：
+    - `Get-Command ISCC.exe`
+    - `echo $env:ISCC_PATH`
 
 ### 安装包目标
 
