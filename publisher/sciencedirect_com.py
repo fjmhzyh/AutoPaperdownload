@@ -9,21 +9,28 @@ class ScienceDirectComLoginHandler(PublisherLoginHandler):
     handler_name = "sciencedirect_com"
 
     def login(self, domain: str, ctx: LoginContext) -> bool:
-        login_button_image = ctx.photo("sciencedirect.com1.png")
-        ctx.click(700, 1000)
-        ctx.log("[图像识别] 正在查找登录按钮...")
-        button_pos = ctx.locate_image(login_button_image)
-        if not button_pos:
-            ctx.log("[图像识别] 未找到登录按钮，尝试直接下载")
-            return False
+        # 已登陆或者开放获取，可以跳过登陆流程
+        open_access = ctx.check_keyword_exist("open access")
+        full_access = ctx.check_keyword_exist("full text access")
+        if open_access or full_access:
+            ctx.log("[免登陆检测]文章为open access, 无需登陆")
+            return True
+        else:
+            login_button_image = ctx.photo("sciencedirect.com1.png")
+            ctx.click(700, 1000)
+            ctx.log("[图像识别] 正在查找登录按钮...")
+            button_pos = ctx.locate_image(login_button_image)
+            if not button_pos:
+                ctx.log("[图像识别] 未找到登录按钮，尝试直接下载")
+                return False
 
-        ctx.log(f"[图像识别] 找到登录按钮，位置: {button_pos}")
-        ctx.click(button_pos)
-        ctx.log("[登录] 已点击登录按钮")
-        ctx.sleep(10)
-        ctx.press("enter")
-        ctx.sleep(10)
-        return True
+            ctx.log(f"[图像识别] 找到登录按钮，位置: {button_pos}")
+            ctx.click(button_pos)
+            ctx.log("[登录] 已点击登录按钮")
+            ctx.sleep(10)
+            ctx.press("enter")
+            ctx.sleep(10)
+            return True
 
 
 def get_handler() -> PublisherLoginHandler:

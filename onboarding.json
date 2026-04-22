@@ -1,0 +1,31 @@
+{
+  "resolutions": [
+    "1920x1080"
+  ],
+  "sites": [
+    {
+      "label": "wiley",
+      "url": "https://advanced.onlinelibrary.wiley.com/doi/10.1002/adfm.75490"
+    },
+    {
+      "label": "springer",
+      "url": "https://link.springer.com/article/10.1007/s13346-025-01824-w"
+    },
+    {
+      "label":"nature",
+      "url":"https://www.nature.com/articles/s41565-025-01958-5"
+    },
+    {
+      "label":"tandonline",
+      "url":"https://www.tandfonline.com/doi/full/10.1080/17435889.2025.2587715"
+    },
+    {
+      "label": "pub.rsc.org",
+      "url": "https://pubs.rsc.org/en/content/articlelanding/2026/tb/d5tb02579f"
+    },
+    {
+      "label": "pub.acs.org",
+      "url": "https://pubs.acs.org/doi/10.1021/jacs.6c00080"
+    }
+  ]
+}

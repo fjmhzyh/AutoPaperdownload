@@ -75,11 +75,13 @@ class TandfonlineComLoginHandler(PublisherLoginHandler):
         ctx.press('enter',1,0.2)
         ctx.log("[页面跳转] 等待跳转到浙大登陆页")
 
-        ctx.sleep(5)
-        if ctx.is_zju_login_page():
-            return ctx.zju_login()
-        else:
-            return True
+        ctx.sleep(10)
+        ctx.press('enter')
+        ctx.sleep(10)
+        # if ctx.is_zju_login_page():
+        #     return ctx.zju_login()
+        # else:
+        #     return True
 
         scroll_step = 300
         scroll_delay = 1

@@ -13,6 +13,11 @@ from datetime import datetime, timedelta
 import requests
 import xml.etree.ElementTree as ET
 import platform
+from image_resolver import (
+    log_profile_once,
+    resolve_image_path,
+    validate_required_images,
+)
 from log_utils import setup_script_logging
 from parent_guard import start_parent_guard
 from platform_compat import (
@@ -20,7 +25,6 @@ from platform_compat import (
     get_default_edge_browser_path,
     hotkey,
     open_url,
-    resource_path,
 )
 from runtime_config import load_runtime_config
 from runtime_exec import run_worker_blocking
@@ -37,8 +41,8 @@ SEARCH_QUERY = "(PCL) AND (Light curing)"
 OUTPUT_FOLDER = data_path("RSS")
 CSV_FILE = data_path("PaperDoi.csv")
 BROWSER_PATH = get_default_edge_browser_path()
-RSS_PNG = resource_path("photos", "RSS.png", base_dir=_BUNDLE_DIR)
-CREATE_PNG = resource_path("photos", "create.png", base_dir=_BUNDLE_DIR)
+RSS_IMAGE_NAME = "RSS.png"
+CREATE_IMAGE_NAME = "create.png"
 NEXT_PROGRAM = "Paperdownload.py"
 NEW_PROGRAM = "SIdownload.py"
 LOG_FILE = data_path("log", "doi_extractor.log")
@@ -359,12 +363,20 @@ def get_system_info() -> Dict[str, str]:
 
 def handle_rss_for_windows():
     """Windows分支：保持原RSS获取逻辑不变"""
-    rss_pos = locate_on_screen_safe(RSS_PNG)
+    rss_png = resolve_image_path(RSS_IMAGE_NAME, base_dir=_BUNDLE_DIR, logger=logger)
+    if not rss_png:
+        return _fallback_to_pubmed_api("缺少RSS图标图片，无法执行RSS自动化")
+
+    rss_pos = locate_on_screen_safe(rss_png)
     if rss_pos:
         pyautogui.click(rss_pos)
         time.sleep(2)
 
-        create_pos = locate_on_screen_safe(CREATE_PNG)
+        create_png = resolve_image_path(CREATE_IMAGE_NAME, base_dir=_BUNDLE_DIR, logger=logger)
+        if not create_png:
+            return _fallback_to_pubmed_api("缺少Create按钮图片，无法执行RSS自动化")
+
+        create_pos = locate_on_screen_safe(create_png)
         if create_pos:
             pyautogui.click(create_pos)
             time.sleep(2)
@@ -571,6 +583,12 @@ def main_entry():
     start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="getdoi_helper")
+    log_profile_once(logger=logger, base_dir=_BUNDLE_DIR)
+    validate_required_images(
+        [RSS_IMAGE_NAME, CREATE_IMAGE_NAME],
+        base_dir=_BUNDLE_DIR,
+        logger=logger,
+    )
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     start_time = datetime.now()

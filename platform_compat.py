@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import shutil
 import webbrowser
 from typing import Dict, Tuple, List, Optional
 
@@ -18,10 +19,37 @@ def is_mac() -> bool:
 
 
 def get_default_edge_browser_path() -> Optional[str]:
-    if not is_windows():
+    """兼容旧命名：当前返回默认 Chrome 路径（找不到则 None）。"""
+    return get_default_chrome_browser_path()
+
+
+def get_default_chrome_browser_path() -> Optional[str]:
+    if is_windows():
+        candidates = [
+            os.path.join(os.environ.get("ProgramFiles", ""), "Google", "Chrome", "Application", "chrome.exe"),
+            os.path.join(os.environ.get("ProgramFiles(x86)", ""), "Google", "Chrome", "Application", "chrome.exe"),
+            os.path.join(os.environ.get("LOCALAPPDATA", ""), "Google", "Chrome", "Application", "chrome.exe"),
+        ]
+        for candidate in candidates:
+            if candidate and os.path.exists(candidate):
+                return candidate
         return None
-    edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-    return edge_path if os.path.exists(edge_path) else None
+
+    if is_mac():
+        candidates = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            os.path.expanduser("~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
+        return None
+
+    for name in ["google-chrome", "google-chrome-stable", "chromium-browser", "chromium", "chrome"]:
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
 
 
 def resource_path(*parts: str, base_dir: Optional[str] = None) -> str:
@@ -53,8 +81,12 @@ def open_url(url: str, browser_path: Optional[str] = None, new_window: bool = Fa
     global _last_open_url_error
     _last_open_url_error = ""
     try:
-        if is_windows() and browser_path and os.path.exists(browser_path):
-            subprocess.Popen([browser_path, url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if browser_path and os.path.exists(browser_path):
+            cmd = [browser_path]
+            if new_window:
+                cmd.append("--new-window")
+            cmd.append(url)
+            subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             return True
         if is_mac():
             completed = subprocess.run(

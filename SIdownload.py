@@ -11,6 +11,7 @@ import json
 import random
 import shutil
 from typing import Dict, List, Optional, Set, Tuple
+from image_resolver import log_profile_once, resolve_image_path, validate_required_images
 from log_utils import setup_script_logging
 from parent_guard import start_parent_guard
 from platform_compat import (
@@ -18,7 +19,6 @@ from platform_compat import (
     hotkey,
     is_windows,
     open_url,
-    resource_path,
 )
 from runtime_config import load_runtime_config
 from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir
@@ -758,9 +758,9 @@ class PaperProcessor:
                 self.simulate_human_behavior()  
                 time.sleep(CONFIG["PAGE_LOAD_TIMEOUT"])
                 self.simulate_human_behavior()
-                download_button_image = resource_path("photos", "download.png", base_dir=_BUNDLE_DIR)
-                if not os.path.exists(download_button_image):
-                    print(f"[警告] 未找到下载按钮参考图: {download_button_image}")
+                download_button_image = resolve_image_path("download.png", base_dir=_BUNDLE_DIR)
+                if not download_button_image:
+                    print("[警告] 未找到下载按钮参考图(download.png)，跳过该下载步骤")
                     return None
                 return self.click_download_button_and_close(download_button_image, doi, wait_time=20)
 
@@ -901,6 +901,8 @@ def main_entry():
     start_parent_guard()
     apply_runtime_config()
     setup_script_logging(__file__, script_name="SIdownload")
+    log_profile_once(base_dir=_BUNDLE_DIR)
+    validate_required_images(["download.png"], base_dir=_BUNDLE_DIR)
     yanzhen_proc = _start_yanzhen_helper()
     processor = PaperProcessor()
     try:

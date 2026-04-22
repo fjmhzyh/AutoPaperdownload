@@ -11,6 +11,7 @@ _DEFAULT_FILES = [
     "DownloadSettings.json",
     "DownloadTemplates.json",
     "LoginConfig.json",
+    "onboarding.json",
     "Paperkeyword.json",
     "SIkeyword.json",
     "initial_tabs.json",

@@ -7,26 +7,27 @@ from typing import Optional, Tuple
 import pyautogui
 import pyperclip
 
+from image_resolver import get_profile_info, log_profile_once, resolve_image_path
 from platform_compat import hotkey as platform_hotkey
 from platform_compat import is_mac
-from platform_compat import resource_path
 from runtime_config import load_runtime_config
 
 
 class LoginContext:
     def __init__(self, base_dir: Optional[str] = None):
         self.base_dir = base_dir
+        log_profile_once(logger=self.log, base_dir=self.base_dir)
 
     def photo(self, filename: str) -> str:
-        candidates = []
-        if is_mac():
-            candidates.append(resource_path("photos", "mac", filename, base_dir=self.base_dir))
-        candidates.append(resource_path("photos", filename, base_dir=self.base_dir))
-
-        for path in candidates:
-            if os.path.exists(path):
-                return path
-        return candidates[0]
+        resolved = resolve_image_path(
+            filename,
+            base_dir=self.base_dir,
+            logger=self.log,
+        )
+        if resolved:
+            return resolved
+        info = get_profile_info(self.base_dir)
+        return os.path.join(info["profile_path"], filename)
 
     def log(self, message: str) -> None:
         print(message)
@@ -37,8 +38,8 @@ class LoginContext:
     def hotkey(self, action_name: str) -> None:
         platform_hotkey(action_name)
 
-    def press(self, key,presses, interval)->None:
-        pyautogui.press(key,presses=presses,interval=interval)
+    def press(self, key: str, presses: int = 1, interval: float = 0.0) -> None:
+        pyautogui.press(key, presses=presses, interval=interval)
 
     def type_text(self, text: str, interval: float = 0.1) -> None:
         pyautogui.write(text, interval=interval)

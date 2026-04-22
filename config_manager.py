@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import traceback
 import tkinter as tk
 from datetime import datetime
@@ -16,6 +17,7 @@ import psutil
 
 from app_version import APP_VERSION
 from log_utils import setup_script_logging
+from platform_compat import get_default_edge_browser_path, open_url
 from runtime_config import load_runtime_config, save_runtime_config
 from runtime_exec import resolve_worker_command, script_name_for_key
 from runtime_paths import data_path, ensure_runtime_layout, get_bundle_dir, get_data_dir
@@ -47,7 +49,18 @@ JSON_FILENAMES = {
 
 CSV_DEFAULT_PATH = data_path("PaperDoi.csv")
 LOG_DIR = data_path("log")
+ONBOARDING_CONFIG_PATH = data_path("onboarding.json")
+ONBOARDING_DONE_FLAG_PATH = data_path("onboarding_done.flag")
 MAX_LOG_LINES = 5000
+PROC_FILE_DEDUP_WINDOW_SEC = 8.0
+DEFAULT_ONBOARDING_CONFIG = {
+    "resolutions": ["1920x1080", "1440x900"],
+    "sites": [
+        {"label": "wiley", "url": "https://onlinelibrary.wiley.com/"},
+        {"label": "pub.rsc.org", "url": "https://pubs.rsc.org/"},
+        {"label": "pub.acs.org", "url": "https://pubs.acs.org/"},
+    ],
+}
 DEFAULT_PAPER_CSV_HEADERS = [
     "DOI",
     "DownloadStatus",
@@ -65,7 +78,7 @@ class PaperAutomationConsole:
         ensure_runtime_layout()
         self.root = root
         self.root.title(f"论文下载全流程自动化管理控制台 v{APP_VERSION}")
-        self.root.geometry("1280x980")
+        self.root.geometry("1120x620")
         self.is_closing = False
         self.root.report_callback_exception = self._report_callback_exception
         self.root.protocol("WM_DELETE_WINDOW", self._on_close_request)
@@ -80,6 +93,7 @@ class PaperAutomationConsole:
         self.log_file_offsets = {}
         self.log_paused = False
         self.log_line_count = 0
+        self.proc_line_seen_ts = {}
         self.current_script_only = tk.BooleanVar(value=False)
         self.current_script_name = ""
         self.running_count_var = tk.StringVar(value="运行中数量: 0")
@@ -92,6 +106,14 @@ class PaperAutomationConsole:
         self.focus_handoff_script_keys = {"getdoi", "paper", "si"}
         self.focus_handoff_count = 0
         self.focus_auto_iconified = False
+        self.onboarding_config = self._load_onboarding_config()
+        self.onboarding_selected_resolution = tk.StringVar(value="")
+        self.onboarding_site_status_var = tk.StringVar(value="")
+        self.onboarding_clicked_sites = set()
+        self.onboarding_resolution_buttons = {}
+        self.onboarding_site_buttons = {}
+        self.onboarding_frame = None
+        self.main_frame = None
 
         # CSV 状态
         self.csv_sort_orders = {}
@@ -130,6 +152,7 @@ class PaperAutomationConsole:
         self._refresh_csv_table()
         self._refresh_all_folders()
         self._initialize_log_offsets()
+        self.show_onboarding_if_needed()
 
         self.root.after(200, self._drain_log_queue)
         self.root.after(1000, self._poll_log_files)
@@ -137,7 +160,8 @@ class PaperAutomationConsole:
         self.root.after(3000, self._auto_refresh_folders)
 
     def setup_ui(self):
-        self.notebook = ttk.Notebook(self.root)
+        self.main_frame = ttk.Frame(self.root)
+        self.notebook = ttk.Notebook(self.main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.run_frame = ttk.Frame(self.notebook)
@@ -166,6 +190,334 @@ class PaperAutomationConsole:
 
         self._last_notebook_tab = self.notebook.index("current")
         self.notebook.bind("<<NotebookTabChanged>>", self._on_notebook_tab_changed)
+
+    def _load_onboarding_config(self):
+        config = {
+            "resolutions": list(DEFAULT_ONBOARDING_CONFIG["resolutions"]),
+            "sites": [dict(item) for item in DEFAULT_ONBOARDING_CONFIG["sites"]],
+        }
+        try:
+            if os.path.exists(ONBOARDING_CONFIG_PATH):
+                with open(ONBOARDING_CONFIG_PATH, "r", encoding="utf-8") as file:
+                    loaded = json.load(file)
+                if isinstance(loaded, dict):
+                    resolutions = loaded.get("resolutions")
+                    if isinstance(resolutions, list):
+                        parsed = [str(item).strip() for item in resolutions if str(item).strip()]
+                        if parsed:
+                            config["resolutions"] = parsed
+
+                    sites = loaded.get("sites")
+                    if isinstance(sites, list):
+                        parsed_sites = []
+                        for item in sites:
+                            if not isinstance(item, dict):
+                                continue
+                            label = str(item.get("label", "")).strip()
+                            url = str(item.get("url", "")).strip()
+                            if not label or not url:
+                                continue
+                            if not (url.startswith("http://") or url.startswith("https://")):
+                                continue
+                            parsed_sites.append({"label": label, "url": url})
+                        if parsed_sites:
+                            config["sites"] = parsed_sites
+        except Exception as exc:
+            print(f"[引导页] onboarding.json 读取失败，使用默认配置: {exc}")
+        return config
+
+    def _is_onboarding_done(self) -> bool:
+        return os.path.exists(ONBOARDING_DONE_FLAG_PATH)
+
+    def _mark_onboarding_done(self):
+        os.makedirs(os.path.dirname(ONBOARDING_DONE_FLAG_PATH), exist_ok=True)
+        payload = {
+            "done": True,
+            "selected_resolution": self.onboarding_selected_resolution.get().strip(),
+            "clicked_sites": sorted(self.onboarding_clicked_sites),
+            "completed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        with open(ONBOARDING_DONE_FLAG_PATH, "w", encoding="utf-8") as file:
+            json.dump(payload, file, ensure_ascii=False, indent=2)
+
+    def _show_main_gui(self):
+        if self.onboarding_frame is not None and str(self.onboarding_frame.winfo_manager()):
+            self.onboarding_frame.pack_forget()
+        if self.main_frame is not None and not str(self.main_frame.winfo_manager()):
+            self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+    def _ensure_onboarding_frame(self):
+        if self.main_frame is not None and str(self.main_frame.winfo_manager()):
+            self.main_frame.pack_forget()
+        if self.onboarding_frame is None:
+            self.onboarding_frame = tk.Frame(self.root, bg="#ffffff")
+        if not str(self.onboarding_frame.winfo_manager()):
+            self.onboarding_frame.pack(fill=tk.BOTH, expand=True)
+
+    def _clear_onboarding_frame(self):
+        if self.onboarding_frame is None:
+            return
+        for child in self.onboarding_frame.winfo_children():
+            child.destroy()
+
+    def show_onboarding_if_needed(self):
+        if self._is_onboarding_done():
+            self._show_main_gui()
+            return
+        self.show_onboarding_step1()
+
+    def _build_onboarding_layout(self, step_text: str, title_text: str, subtitle_text: str):
+        self.onboarding_frame.configure(bg="#ffffff")
+
+        shell = tk.Frame(self.onboarding_frame, bg="#ffffff")
+        shell.pack(fill=tk.BOTH, expand=True)
+
+        card = tk.Frame(shell, bg="#ffffff", bd=0)
+        card.pack(fill=tk.BOTH, expand=True)
+
+        step_badge = tk.Label(
+            card,
+            text=step_text,
+            font=("Microsoft YaHei", 10, "bold"),
+            bg="#eef4ff",
+            fg="#2e4a7d",
+            padx=14,
+            pady=6,
+        )
+        step_badge.pack(pady=(26, 16))
+
+        title = tk.Label(
+            card,
+            text=title_text,
+            font=("Microsoft YaHei", 22, "bold"),
+            bg="#ffffff",
+            fg="#1e2b42",
+        )
+        title.pack(pady=(0, 10))
+
+        subtitle = tk.Label(
+            card,
+            text=subtitle_text,
+            font=("Microsoft YaHei", 12),
+            bg="#ffffff",
+            fg="#4e5b72",
+            wraplength=860,
+            justify=tk.CENTER,
+        )
+        subtitle.pack(pady=(0, 24))
+
+        content = tk.Frame(card, bg="#ffffff")
+        content.pack(fill=tk.BOTH, expand=True, padx=40, pady=(0, 10))
+
+        footer = tk.Frame(card, bg="#ffffff")
+        footer.pack(fill=tk.X, padx=40, pady=(6, 30))
+        return content, footer
+
+    def _create_onboarding_option_button(self, parent, text: str, command, width: int = 14):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            width=width,
+            font=("Microsoft YaHei", 14, "bold"),
+            bg="#f2f5fb",
+            fg="#22324f",
+            activebackground="#e0ebff",
+            activeforeground="#1f3f73",
+            relief=tk.FLAT,
+            padx=12,
+            pady=12,
+            cursor="hand2",
+            bd=0,
+        )
+
+    def _create_primary_action_button(self, parent, text: str, command, width: int = 12):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            width=width,
+            font=("Microsoft YaHei", 14, "bold"),
+            bg="#2f6fed",
+            fg="#111111",
+            activebackground="#275ccc",
+            activeforeground="#111111",
+            relief=tk.FLAT,
+            padx=14,
+            pady=10,
+            cursor="hand2",
+            bd=0,
+        )
+
+    def _create_secondary_action_button(self, parent, text: str, command, width: int = 12):
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            width=width,
+            font=("Microsoft YaHei", 13, "bold"),
+            bg="#edf1f8",
+            fg="#29446f",
+            activebackground="#dde6f5",
+            activeforeground="#223b60",
+            relief=tk.FLAT,
+            padx=12,
+            pady=9,
+            cursor="hand2",
+            bd=0,
+        )
+
+    def _set_selected_resolution(self, resolution: str):
+        self.onboarding_selected_resolution.set(str(resolution).strip())
+        for key, button in self.onboarding_resolution_buttons.items():
+            active = key == self.onboarding_selected_resolution.get().strip()
+            button.configure(
+                bg="#dceaff" if active else "#f2f5fb",
+                fg="#1d4f9a" if active else "#22324f",
+                activebackground="#dceaff" if active else "#e0ebff",
+                relief=tk.FLAT,
+            )
+
+    def show_onboarding_step1(self):
+        self._ensure_onboarding_frame()
+        self._clear_onboarding_frame()
+
+        content, footer = self._build_onboarding_layout(
+            step_text="步骤 1 / 2",
+            title_text="欢迎使用 AutoPaper",
+            subtitle_text="请先选择推荐分辨率，这一步只用于首次引导记录，不会修改脚本业务逻辑。",
+        )
+
+        options_wrap = tk.Frame(content, bg="#ffffff")
+        options_wrap.pack(pady=(10, 18))
+
+        self.onboarding_resolution_buttons = {}
+        resolutions = list(self.onboarding_config.get("resolutions", []))
+        for idx, resolution in enumerate(resolutions):
+            btn = self._create_onboarding_option_button(
+                options_wrap,
+                text=resolution,
+                command=lambda r=resolution: self._set_selected_resolution(r),
+                width=14,
+            )
+            row, col = divmod(idx, 3)
+            btn.grid(row=row, column=col, padx=12, pady=10, sticky="nsew")
+            self.onboarding_resolution_buttons[resolution] = btn
+
+        for col_idx in range(min(3, max(1, len(resolutions)))):
+            options_wrap.grid_columnconfigure(col_idx, weight=1)
+
+        hint = tk.Label(
+            content,
+            text="建议选择你当前屏幕最匹配的一项",
+            font=("Microsoft YaHei", 11),
+            bg="#ffffff",
+            fg="#61718a",
+        )
+        hint.pack(pady=(0, 6))
+
+        selected = self.onboarding_selected_resolution.get().strip()
+        if selected in self.onboarding_resolution_buttons:
+            self._set_selected_resolution(selected)
+
+        next_btn = self._create_primary_action_button(
+            footer,
+            text="下一步",
+            command=self._go_to_onboarding_step2,
+            width=16,
+        )
+        next_btn.pack()
+
+    def _go_to_onboarding_step2(self):
+        self.show_onboarding_step2()
+
+    def _mark_site_clicked(self, label: str):
+        self.onboarding_clicked_sites.add(label)
+        for site in self.onboarding_config.get("sites", []):
+            site_label = site.get("label", "")
+            button = self.onboarding_site_buttons.get(site_label)
+            if button is None:
+                continue
+            clicked = site_label in self.onboarding_clicked_sites
+            button.configure(
+                bg="#ddf5e7" if clicked else "#f2f5fb",
+                fg="#1f6647" if clicked else "#22324f",
+                activebackground="#ddf5e7" if clicked else "#e0ebff",
+                relief=tk.FLAT,
+            )
+        total = len(self.onboarding_config.get("sites", []))
+        done = len(self.onboarding_clicked_sites)
+        self.onboarding_site_status_var.set(f"已点击网站: {done}/{total}")
+
+    def _open_onboarding_site(self, site: dict):
+        label = str(site.get("label", "")).strip()
+        url = str(site.get("url", "")).strip()
+        if not label or not url:
+            return
+        ok = open_url(url, browser_path=get_default_edge_browser_path(), new_window=True)
+        if not ok:
+            messagebox.showerror("打开失败", f"无法打开网站:\n{url}")
+            return
+        self._mark_site_clicked(label)
+
+    def show_onboarding_step2(self):
+        self._ensure_onboarding_frame()
+        self._clear_onboarding_frame()
+        self.onboarding_clicked_sites = set()
+        self.onboarding_site_buttons = {}
+
+        content, footer = self._build_onboarding_layout(
+            step_text="步骤 2 / 2",
+            title_text="请先在 Chrome 浏览器中登录以下网站",
+            subtitle_text="每点击一个按钮都会直接打开对应网站。必须完成全部网站后，才可进入主界面。",
+        )
+
+        options_wrap = tk.Frame(content, bg="#ffffff")
+        options_wrap.pack(pady=(6, 20))
+
+        sites = list(self.onboarding_config.get("sites", []))
+        for idx, site in enumerate(sites):
+            label = str(site.get("label", "")).strip()
+            if not label:
+                continue
+            btn = self._create_onboarding_option_button(
+                options_wrap,
+                text=label,
+                command=lambda s=site: self._open_onboarding_site(s),
+                width=14,
+            )
+            row, col = divmod(idx, 3)
+            btn.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            self.onboarding_site_buttons[label] = btn
+
+        for col_idx in range(min(3, max(1, len(sites)))):
+            options_wrap.grid_columnconfigure(col_idx, weight=1)
+
+        self.onboarding_site_status_var.set(f"已点击网站: 0/{len(sites)}")
+        status_label = tk.Label(
+            content,
+            textvariable=self.onboarding_site_status_var,
+            font=("Microsoft YaHei", 12, "bold"),
+            bg="#ffffff",
+            fg="#3a4d6d",
+        )
+        status_label.pack(pady=(4, 0))
+
+        next_btn = self._create_primary_action_button(
+            footer,
+            text="下一步",
+            command=self.finish_onboarding_and_show_main_gui,
+            width=16,
+        )
+        next_btn.pack()
+
+    def finish_onboarding_and_show_main_gui(self):
+        try:
+            self._mark_onboarding_done()
+        except Exception as exc:
+            messagebox.showerror("保存失败", f"写入引导完成标记失败:\n{exc}")
+            return
+        self._show_main_gui()
 
     def setup_run_and_wizard_tab(self):
         left_frame = ttk.LabelFrame(self.run_frame, text=" 核心任务启动 ")
@@ -1096,6 +1448,10 @@ class PaperAutomationConsole:
     def _append_log_line(self, prefix: str, text: str):
         if not self._should_show_line(prefix):
             return
+        if prefix.startswith("FILE:") and self._is_recent_proc_duplicate(text):
+            return
+        if prefix.startswith("PROC:"):
+            self._record_proc_line(text)
 
         line = f"[{prefix}] {text}\n"
         self.log_text.insert(tk.END, line)
@@ -1108,6 +1464,34 @@ class PaperAutomationConsole:
 
         if not self.log_paused:
             self.log_text.see(tk.END)
+
+    def _normalize_log_text(self, text: str) -> str:
+        return str(text or "").strip()
+
+    def _cleanup_proc_line_cache(self, now_ts: float):
+        expire_before = now_ts - PROC_FILE_DEDUP_WINDOW_SEC
+        stale_keys = [k for k, ts in self.proc_line_seen_ts.items() if ts < expire_before]
+        for key in stale_keys:
+            self.proc_line_seen_ts.pop(key, None)
+
+    def _record_proc_line(self, text: str):
+        key = self._normalize_log_text(text)
+        if not key:
+            return
+        now_ts = time.monotonic()
+        self.proc_line_seen_ts[key] = now_ts
+        self._cleanup_proc_line_cache(now_ts)
+
+    def _is_recent_proc_duplicate(self, text: str) -> bool:
+        key = self._normalize_log_text(text)
+        if not key:
+            return False
+        now_ts = time.monotonic()
+        self._cleanup_proc_line_cache(now_ts)
+        seen_ts = self.proc_line_seen_ts.get(key)
+        if seen_ts is None:
+            return False
+        return (now_ts - seen_ts) <= PROC_FILE_DEDUP_WINDOW_SEC
 
     def _should_show_line(self, prefix: str) -> bool:
         if not self.current_script_only.get():

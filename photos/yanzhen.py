@@ -5,12 +5,19 @@ import os
 import math
 import sys
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from image_resolver import log_profile_once, resolve_image_path
+
 IS_MAC = sys.platform == "darwin"
 
 # === ⚙️ 配置区域 ===
 
-# 图片文件名
-IMAGE_NAME = 'target.png' if IS_MAC else 'target.jpeg'
+# 图片文件名候选（按顺序优先）
+IMAGE_NAMES = ["target.png", "target.jpeg", "target.jpg"]
 
 # 匹配相似度
 CONFIDENCE = 0.8           
@@ -32,7 +39,12 @@ pyautogui.FAILSAFE = False
 def get_image_path():
     """获取图片绝对路径"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(current_dir, IMAGE_NAME)
+    log_profile_once(base_dir=current_dir)
+    for image_name in IMAGE_NAMES:
+        candidate = resolve_image_path(image_name, base_dir=current_dir)
+        if candidate:
+            return candidate
+    return None
 
 def get_bezier_point(t, p0, p1, p2, p3):
     """计算三阶贝塞尔曲线上的点"""
@@ -129,19 +141,20 @@ def simulate_human_click(location):
 
 def main():
     target_path = get_image_path()
-    
+    screen_width,screen_height = pyautogui.size()
     print("=" * 40)
     print(f"🤖 超级自动点击器 (拟人+防崩版)")
     print(f"当前系统: {sys.platform}")
-    print(f"📂 正在监听图片: {IMAGE_NAME}")
+    print(f"当前分辨率: {screen_width}-{screen_height}")
+    print(f"📂 正在监听图片: {target_path}")
     print(f"🛑 停止运行请按 Ctrl+C")
     if SEARCH_REGION:
         print(f"🔍 已启用区域搜索优化: {SEARCH_REGION}")
     print("=" * 40)
     
-    if not os.path.exists(target_path):
+    if not target_path or not os.path.exists(target_path):
         print(f"❌ 错误：找不到文件 {target_path}")
-        print("请确保图片和脚本在同一目录下。")
+        print("请确认对应系统+分辨率目录下存在目标图片。")
         return
 
     # --- 主循环结构优化 ---
