@@ -15,7 +15,7 @@
   },
   "params": {
     "USE_SELENIUM": false,
-    "DELAY_PAPER": 60,
+    "DELAY_PAPER": 20,
     "DELAY_SI": 5,
     "TIMEOUT": 13,
     "CLEAN_THRESHOLD": 47,

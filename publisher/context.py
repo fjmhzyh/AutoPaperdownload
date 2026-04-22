@@ -149,7 +149,7 @@ class LoginContext:
         try:
             # 先点击页面中部，尽量把焦点放到网页内容区域
             screen_w, screen_h = pyautogui.size()
-            pyautogui.click(screen_w // 2, screen_h // 2)
+            pyautogui.click(50, screen_h // 2)
             self.sleep(0.2)
 
             try:

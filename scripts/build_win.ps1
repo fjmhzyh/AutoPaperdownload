@@ -102,10 +102,10 @@ function Resolve-IsccPath {
   $checked = New-Object System.Collections.ArrayList
   $resolved = $null
 
-  # 1) 手动参数
+  # 1) Manual parameter
   Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate $ManualPath
 
-  # 2) 环境变量
+  # 2) Environment variable
   Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate $env:ISCC_PATH
 
   # 3) PATH
@@ -115,14 +115,20 @@ function Resolve-IsccPath {
       Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate $cmd.Source
     }
   } catch {
-    # 忽略，继续其他来源
+    # Ignore and continue probing
   }
 
-  # 4) 常见安装路径
-  Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-  Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+  # 4) Common install paths
+  $pf86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+  $pf64 = [Environment]::GetEnvironmentVariable('ProgramFiles')
+  if (-not [string]::IsNullOrWhiteSpace($pf86)) {
+    Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate (Join-Path $pf86 "Inno Setup 6\ISCC.exe")
+  }
+  if (-not [string]::IsNullOrWhiteSpace($pf64)) {
+    Add-IsccCandidate -Checked $checked -ResolvedPath ([ref]$resolved) -Candidate (Join-Path $pf64 "Inno Setup 6\ISCC.exe")
+  }
 
-  # 5) 注册表（卸载项 + App Paths，64/32视图）
+  # 5) Registry (uninstall keys + App Paths, 64/32 views)
   $uninstallKeys = @(
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1",
     "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1"
@@ -168,31 +174,79 @@ function Resolve-IsccPath {
   }
 }
 
+function Invoke-PyInstallerChecked {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$Arguments,
+    [Parameter(Mandatory = $true)]
+    [string]$StepName
+  )
+
+  Write-Host "[Build] $StepName"
+  & python @Arguments
+  if ($LASTEXITCODE -ne 0) {
+    Write-Error "PyInstaller failed at step '$StepName', exit code: $LASTEXITCODE"
+    exit 1
+  }
+}
+
 if (Test-Path build) { Remove-Item build -Recurse -Force }
 if (Test-Path dist) { Remove-Item dist -Recurse -Force }
 if (-not (Test-Path 'release\\win')) { New-Item -ItemType Directory -Path 'release\\win' | Out-Null }
 
-python -m PyInstaller --noconfirm --clean --onedir --windowed --name AutoPaperdownload config_manager.py @commonHidden @dataArgs
+${guiArgs} = @(
+  "-m", "PyInstaller",
+  "--noconfirm",
+  "--clean",
+  "--onedir",
+  "--windowed",
+  "--name", "AutoPaperdownload",
+  "config_manager.py"
+) + $commonHidden + $dataArgs
+Invoke-PyInstallerChecked -StepName "Build GUI (AutoPaperdownload)" -Arguments $guiArgs
 
 foreach ($worker in $workers) {
-  python -m PyInstaller --noconfirm --onefile --name $worker "$worker.py" @commonHidden @dataArgs
-  Copy-Item "dist\\$worker.exe" -Destination "$distDir\\$worker.exe" -Force
+  ${workerArgs} = @(
+    "-m", "PyInstaller",
+    "--noconfirm",
+    "--onefile",
+    "--name", $worker,
+    "$worker.py"
+  ) + $commonHidden + $dataArgs
+  Invoke-PyInstallerChecked -StepName "Build worker ($worker)" -Arguments $workerArgs
+
+  $workerExeOnefile = "dist\\$worker.exe"
+  $workerExeOnedir = "dist\\$worker\\$worker.exe"
+  $workerSource = $null
+  if (Test-Path $workerExeOnefile -PathType Leaf) {
+    $workerSource = $workerExeOnefile
+  } elseif (Test-Path $workerExeOnedir -PathType Leaf) {
+    $workerSource = $workerExeOnedir
+  }
+
+  if (-not $workerSource) {
+    Write-Error "Worker build output missing for '$worker'. Checked: $workerExeOnefile, $workerExeOnedir"
+    exit 1
+  }
+
+  Copy-Item $workerSource -Destination "$distDir\\$worker.exe" -Force
+  Write-Host "[Build] Worker copied: $workerSource -> $distDir\\$worker.exe"
 }
 
 $resolveResult = Resolve-IsccPath -ManualPath $IsccPath
-Write-Host "[Inno] 已检查的 ISCC 路径候选:"
+Write-Host "[Inno] Checked ISCC path candidates:"
 if ($resolveResult.Checked.Count -eq 0) {
-  Write-Host "  - (无候选)"
+  Write-Host "  - (none)"
 } else {
   $resolveResult.Checked | ForEach-Object { Write-Host "  - $_" }
 }
 
 $iscc = $resolveResult.Path
 if ($iscc) {
-  Write-Host "[Inno] 已使用 ISCC: $iscc"
+  Write-Host "[Inno] Using ISCC: $iscc"
   & $iscc "/DMyAppVersion=$version" "/DSourceDir=$distDir" "packaging\\autopaperdownload.iss"
   if ($LASTEXITCODE -ne 0) {
-    Write-Error "Inno Setup 编译失败，退出码: $LASTEXITCODE"
+    Write-Error "Inno Setup compilation failed, exit code: $LASTEXITCODE"
     exit 1
   }
 
@@ -203,13 +257,13 @@ if ($iscc) {
     "$($h.Hash)  $($_.Name)" | Out-File -FilePath $hashOut -Encoding utf8 -Append
   }
 
-  Write-Host "安装包已生成到 release\\win"
+  Write-Host "Installer generated in release\\win"
   $artifacts = Get-ChildItem "release\\win" -File | Where-Object { $_.Extension -eq ".exe" -or $_.Name -eq "SHA256SUMS.txt" }
   if ($artifacts) {
-    Write-Host "[Inno] release\\win 产物:"
+    Write-Host "[Inno] release\\win artifacts:"
     $artifacts | Sort-Object Name | ForEach-Object { Write-Host "  - $($_.Name)" }
   }
 } else {
-  Write-Warning "未检测到 Inno Setup(ISCC.exe)，已生成可分发目录: $distDir"
-  Write-Warning "当前仅会生成 dist，不会生成 release\\win 安装包。可用 -IsccPath 指定 ISCC.exe。"
+  Write-Warning "Inno Setup (ISCC.exe) not found. Portable output generated: $distDir"
+  Write-Warning "Only dist will be generated; release\\win installer will not be created. Use -IsccPath to specify ISCC.exe."
 }

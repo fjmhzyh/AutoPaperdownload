@@ -13,8 +13,9 @@ class AdvancedOnlinelibraryWileyComLoginHandler(PublisherLoginHandler):
         login_button_img = ctx.photo("advanced.onlinelibrary.wiley.com1.png")
         submit_button_img = ctx.photo("advanced.onlinelibrary.wiley.com2.png")
         # 检查文章是否开源，开源则跳过登陆流程
-        check_result =ctx.check_keyword_exist("open access")
-        if check_result:
+        open_access = ctx.check_keyword_exist("open access")
+        full_access = ctx.check_keyword_exist("full access")
+        if open_access or full_access:
             ctx.log("[开源检测]文章为open access, 无需登陆")
             return True
         else:

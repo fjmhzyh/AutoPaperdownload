@@ -139,6 +139,32 @@ def _default_watch_dirs() -> List[str]:
     return dirs
 
 
+def _paste_url_to_address_bar(url: str) -> bool:
+    """优先通过剪贴板粘贴URL到地址栏，失败时回退逐字输入。"""
+    previous_clipboard = None
+    try:
+        previous_clipboard = pyperclip.paste()
+    except Exception:
+        previous_clipboard = None
+
+    try:
+        print("[地址栏输入] 使用粘贴方式打开URL")
+        pyperclip.copy(url)
+        time.sleep(0.1)
+        hotkey("paste")
+        return True
+    except Exception as e:
+        print(f"[地址栏输入] 粘贴失败，回退逐字输入: {e}")
+        pyautogui.write(url, interval=0.01)
+        return False
+    finally:
+        if previous_clipboard is not None:
+            try:
+                pyperclip.copy(previous_clipboard)
+            except Exception:
+                pass
+
+
 # 全局配置
 class Config:
     """应用程序配置类"""
@@ -594,11 +620,12 @@ class DownloadTemplateManager:
 
 class WebScraper:
     """网页内容抓取类"""
+    BASE_URL = "https://www.baidu.com/"
+
     def __init__(self, use_selenium: bool = False):
         self.use_selenium = use_selenium
         self.screen_width, self.screen_height = pyautogui.size()
         self.driver = None  # Selenium驱动实例
-        self.anchor_tab_ready = False
         self.work_tab_open = False
         
     def __del__(self):
@@ -611,175 +638,85 @@ class WebScraper:
        
         return self._fetch_html_with_pyautogui(doi)
 
-    def _ensure_anchor_page(self) -> str:
-        """创建并返回项目介绍锚点页（mac/win统一使用）"""
-        anchor_path = data_path("browser_anchor_intro.html")
-        if not os.path.exists(anchor_path):
-            try:
-                with open(anchor_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        """<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AutoPaperdownload 工作锚点页</title>
-  <style>
-    :root { color-scheme: light; }
-    body {
-      margin: 0;
-      font-family: "PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
-      background: linear-gradient(135deg, #f6f9ff 0%, #eef8f2 100%);
-      color: #1f2937;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      box-sizing: border-box;
-    }
-    .card {
-      max-width: 760px;
-      width: 100%;
-      background: #ffffffcc;
-      backdrop-filter: blur(2px);
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      padding: 28px;
-    }
-    h1 {
-      margin: 0 0 10px;
-      font-size: 28px;
-      line-height: 1.2;
-      color: #0f172a;
-    }
-    p {
-      margin: 10px 0;
-      line-height: 1.8;
-      color: #334155;
-    }
-    .tag {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #e0f2fe;
-      color: #0c4a6e;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
-    ul {
-      margin: 10px 0 0 20px;
-      color: #475569;
-      line-height: 1.7;
-    }
-    code {
-      background: #f1f5f9;
-      border-radius: 6px;
-      padding: 2px 6px;
-      color: #0f172a;
-    }
-  </style>
-</head>
-<body>
-  <section class="card">
-    <h1>AutoPaperdownload</h1>
-    <p>这是自动文献处理程序的工作锚点页。</p>
-    <p>程序运行期间会保持本页常驻，用于稳定浏览器会话，减少频繁打开/关闭窗口造成的失败。</p>
-    <span class="tag">Session Anchor</span>
-    <ul>
-      <li>DOI 解析、登录、HTML 抓取和下载会在新标签页执行。</li>
-      <li>每个任务结束后仅关闭工作标签，锚点页始终保留。</li>
-      <li>如需手动验证运行状态，可查看日志目录：<code>log/</code></li>
-    </ul>
-  </section>
-</body>
-</html>
-"""
-                    )
-            except Exception as e:
-                print(f"[浏览器会话] 创建项目介绍锚点页失败: {e}")
-        return anchor_path
+    def _is_baidu_url(self, url: Optional[str]) -> bool:
+        if not url:
+            return False
+        candidate = str(url).strip().lower()
+        return candidate == self.BASE_URL
 
-    def _anchor_target(self) -> str:
-        return self._ensure_anchor_page()
+    def open_base_page(self) -> bool:
+        print(f"[基准页] 启动打开百度页: {self.BASE_URL}")
+        ok = open_url(self.BASE_URL, browser_path=Config.EDGE_BROWSER_PATH)
+        if not ok:
+            err = get_last_open_url_error()
+            if err:
+                print(f"[基准页] 打开百度页失败: {err}")
+            else:
+                print("[基准页] 打开百度页失败")
+            return False
+        time.sleep(2)
+        return True
 
-    def ensure_session_alive(self) -> bool:
-        current = self._get_current_url(allow_about_blank=True, quiet=True)
-        if current:
-            if not self.anchor_tab_ready:
-                print(f"[浏览器会话] 检测到现有会话，当前URL={current}")
-            self.anchor_tab_ready = True
-            return True
-        self.anchor_tab_ready = False
-        return False
-
-    def ensure_anchor_tab(self) -> bool:
-        if self.ensure_session_alive():
-            print("[浏览器会话] 复用已有锚点会话")
-            return True
-
-        anchor_target = self._anchor_target()
-        print(f"[浏览器会话] 创建锚点页: {anchor_target}")
-        for attempt in range(1, 4):
-            if not open_url(anchor_target, browser_path=Config.EDGE_BROWSER_PATH):
-                err = get_last_open_url_error()
-                if err:
-                    print(f"[浏览器会话] 锚点页创建失败 第{attempt}/3次: {err}")
-                else:
-                    print(f"[浏览器会话] 锚点页创建失败 第{attempt}/3次")
-                time.sleep(1)
-                continue
-
-            time.sleep(1.5)
-            current = self._get_current_url(allow_about_blank=True, quiet=True)
-            if current:
-                self.anchor_tab_ready = True
-                self.work_tab_open = False
-                print(f"[浏览器会话] 锚点页创建成功，当前URL={current}")
+    def ensure_base_page_current(self) -> bool:
+        max_close_checks = 20
+        close_checks = 0
+        while True:
+            current_url = self._get_current_url(allow_about_blank=True, quiet=True)
+            if not current_url:
+                print("[基准页][降级] URL读取失败，按策略不关闭标签，继续DOI流程")
                 return True
-            print(f"[浏览器会话] 锚点页确认失败 第{attempt}/3次，地址栏不可读")
-            time.sleep(1)
 
-        self.anchor_tab_ready = False
-        print("[浏览器会话] 锚点页创建失败，无法建立浏览器会话")
-        return False
+            if self._is_baidu_url(current_url):
+                print("[基准页] 已回到百度页，开始处理DOI")
+                return True
+
+            close_checks += 1
+            if close_checks > max_close_checks:
+                print("[基准页][保护] 连续检查超过上限，停止关闭并继续DOI流程")
+                return True
+
+            print(f"[基准页] 当前URL非百度，关闭当前标签: {current_url}")
+            try:
+                hotkey("close_tab")
+            except Exception as e:
+                print(f"[基准页] 关闭当前标签失败: {e}")
+                return False
+            time.sleep(1)
+            self.work_tab_open = False
 
     def open_work_tab_with_url(self, url: str) -> bool:
-        if not self.ensure_anchor_tab():
-            return False
         try:
+            print(f"[工作Tab] 打开: {url}")
             hotkey("new_tab")
             time.sleep(0.8)
             hotkey("focus_address_bar")
             time.sleep(0.4)
             hotkey("select_all")
-            pyautogui.press("backspace")
-            pyautogui.write(url, interval=0.01)
+            _paste_url_to_address_bar(url)
+            time.sleep(0.2)
             pyautogui.press("enter")
             pyautogui.press("enter")
             self.work_tab_open = True
-            print(f"[浏览器会话] 工作标签已打开: {url}")
+            print(f"[工作Tab] 打开成功: {url}")
             return True
         except Exception as e:
             print(f"[浏览器会话] 工作标签打开失败，回退系统打开: {str(e)}")
             ok = open_url(url, browser_path=Config.EDGE_BROWSER_PATH)
             self.work_tab_open = bool(ok)
             if ok:
-                print(f"[浏览器会话] 回退系统打开成功: {url}")
+                print(f"[工作Tab] 回退系统打开成功: {url}")
             return ok
 
-    def close_work_tab_keep_anchor(self):
+    def close_work_tab(self):
         if not self.work_tab_open:
             return
         try:
+            print("[工作Tab] 关闭当前工作标签")
             hotkey("close_tab")
             time.sleep(1)
-            print("[浏览器会话] 已关闭工作标签，保留锚点页")
+            print("[工作Tab] 关闭成功")
         except Exception as e:
-            print(f"[浏览器会话] 关闭工作标签失败: {str(e)}")
+            print(f"[工作Tab] 关闭失败: {str(e)}")
         finally:
             self.work_tab_open = False
 
@@ -792,11 +729,6 @@ class WebScraper:
 
             for startup_attempt in range(1, 4):
                 print(f"[URL启动尝试] DOI={doi} 第{startup_attempt}/3次打开工作标签")
-                if not self.ensure_anchor_tab():
-                    print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：锚点会话不可用")
-                    time.sleep(1)
-                    continue
-
                 if not self.open_work_tab_with_url(doi_url):
                     startup_error = get_last_open_url_error()
                     if startup_error:
@@ -806,19 +738,12 @@ class WebScraper:
                     time.sleep(1)
                     continue
 
-                time.sleep(2)
-                startup_url = self._get_current_url()
-                if startup_url:
-                    print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次成功，地址栏URL={startup_url}")
-                    startup_confirmed = True
-                    break
-
-                print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次失败：地址栏URL不可读")
-                self.close_work_tab_keep_anchor()
-                time.sleep(1)
+                print(f"[URL启动确认] DOI={doi} 第{startup_attempt}/3次成功：工作标签已打开")
+                startup_confirmed = True
+                break
 
             if not startup_confirmed:
-                print(f"[URL启动失败] DOI={doi} 浏览器启动后地址栏URL连续3次不可读，终止当前DOI")
+                print(f"[URL启动失败] DOI={doi} 工作标签连续3次打开失败，终止当前DOI")
                 return None
 
             print(f"[URL获取] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
@@ -845,38 +770,21 @@ class WebScraper:
 
             if not final_url:
                 print("[URL获取错误] 地址栏URL为空或读取失败")
-                self.close_work_tab_keep_anchor()
+                self.close_work_tab()
                 return None
 
             print(f"[URL解析成功] DOI={doi} -> {final_url}")
             return final_url
         except Exception as e:
             print(f"[URL获取错误] PyAutoGUI获取final_url失败: {str(e)}")
-            self.close_work_tab_keep_anchor()
+            self.close_work_tab()
             return None
-
-    def _open_url_in_new_tab(self, url: str) -> bool:
-        """在当前浏览器中打开新标签页并导航到目标URL"""
-        try:
-            hotkey("new_tab")
-            time.sleep(1)
-            hotkey("focus_address_bar")
-            time.sleep(0.5)
-            hotkey("select_all")
-            pyautogui.press("backspace")
-            pyautogui.write(url, interval=0.01)
-            pyautogui.press("enter")
-            pyautogui.press("enter")
-            return True
-        except Exception as e:
-            print(f"[PyAutoGUI警告] 新标签页导航失败，回退系统打开: {str(e)}")
-            return open_url(url, browser_path=Config.EDGE_BROWSER_PATH)
 
     def fetch_html_in_new_tab(self, url: str) -> Optional[str]:
         """在新标签页打开URL，抓取源码后关闭当前标签页"""
         print(f"[PyAutoGUI] 新标签页抓取HTML: {url}")
         try:
-            if not self._open_url_in_new_tab(url):
+            if not self.open_work_tab_with_url(url):
                 print("[PyAutoGUI错误] 打开新标签页失败")
                 return None
             print(f"[PyAutoGUI] 等待页面加载({Config.PAGE_LOAD_TIMEOUT}秒)...")
@@ -887,7 +795,7 @@ class WebScraper:
             print(f"[PyAutoGUI错误] 新标签页抓取HTML失败: {str(e)}")
             return None
         finally:
-            self._close_current_tab()
+            self.close_work_tab()
     
     
     def _fetch_html_with_pyautogui(self, doi: str) -> Tuple[Optional[str], Optional[str]]:
@@ -930,6 +838,7 @@ class WebScraper:
             hotkey("select_all")
             time.sleep(1)
             hotkey("copy")
+            pyautogui.press('esc')
             time.sleep(2)
             copied = (pyperclip.paste() or "").strip()
             if not copied:
@@ -1207,9 +1116,15 @@ class PaperExtractor:
 
 class FileDownloader:
     """文件下载类"""
-    def __init__(self, download_folder: str, settings_manager: DownloadSettingsManager):
+    def __init__(
+        self,
+        download_folder: str,
+        settings_manager: DownloadSettingsManager,
+        web_scraper: Optional[WebScraper] = None,
+    ):
         self.download_folder = download_folder
         self.settings_manager = settings_manager
+        self.web_scraper = web_scraper
         self.last_downloaded_file = None  # 记录最后下载的文件名
         self.domain_click_manager = DomainClickManager()  # 新增的点击位置管理器
         self.download_tab_opened = False
@@ -1349,6 +1264,12 @@ class FileDownloader:
     def _open_url_in_browser(self, url: str):
         """在浏览器新标签页打开URL"""
         self.download_tab_opened = False
+        if self.web_scraper:
+            ok = self.web_scraper.open_work_tab_with_url(url)
+            self.download_tab_opened = bool(ok)
+            if not ok:
+                print("[浏览器错误] 下载阶段打开工作标签失败")
+            return
         try:
             print("[浏览器] 新标签页打开URL...")
             hotkey("new_tab")
@@ -1356,8 +1277,8 @@ class FileDownloader:
             hotkey("focus_address_bar")
             time.sleep(0.5)
             hotkey("select_all")
-            pyautogui.press("backspace")
-            pyautogui.write(url, interval=0.01)
+            _paste_url_to_address_bar(url)
+            time.sleep(0.2)
             pyautogui.press("enter")
             time.sleep(0.5)
             pyautogui.press("enter")
@@ -1372,21 +1293,25 @@ class FileDownloader:
             print(f"[浏览器] 已回退系统方式打开URL: {url}")
     
     def _cleanup_after_download(self):
-        """下载完成后清理下载工作标签（保留锚点页）"""
+        """下载完成后清理下载工作标签"""
         try:
-            print("[浏览器会话] 关闭下载工作标签，保留锚点页")
+            print("[工作Tab] 下载阶段清理工作标签")
             if not self.download_tab_opened:
-                print("[浏览器会话] 本轮未打开下载标签，跳过关闭操作")
+                print("[工作Tab] 下载阶段未打开工作标签，跳过关闭")
+                return
+            if self.web_scraper:
+                self.web_scraper.close_work_tab()
+                print("[工作Tab] 下载阶段工作标签已关闭")
                 return
             for i in range(2):
                 try:
                     hotkey("close_tab")
                     time.sleep(1)
-                    print(f"[浏览器会话] 下载标签关闭完成(尝试{i + 1}/2)")
+                    print(f"[工作Tab] 下载标签关闭完成(尝试{i + 1}/2)")
                     break
                 except Exception as e:
-                    print(f"[浏览器会话] 关闭下载标签失败(尝试{i + 1}/2): {str(e)}")
-            print("[清理] 下载阶段清理完成（浏览器保持打开）")
+                    print(f"[工作Tab] 下载标签关闭失败(尝试{i + 1}/2): {str(e)}")
+            print("[工作Tab] 下载阶段清理完成")
         except Exception as e:
             print(f"[清理错误] 清理过程中出错: {str(e)}")
         finally:
@@ -1434,9 +1359,8 @@ class FileDownloader:
                 print(f"[下载保存] mac文件名: {save_name}")
             time.sleep(2)
             pyautogui.press('enter')
-            time.sleep(2)
-            pyautogui.press('enter')
-            pyautogui.press('enter')
+            time.sleep(1)
+            pyautogui.press('enter',presses=3,interval=0.2)
             time.sleep(2)
 
         except Exception as e:
@@ -1695,7 +1619,8 @@ class PaperProcessor:
         # 文件下载器需要下载设置管理器
         self.file_downloader = FileDownloader(
             Config.PAPER_DOWNLOAD_FOLDER,
-            self.download_settings_manager
+            self.download_settings_manager,
+            self.web_scraper,
         )
         
         # 域名分支管理
@@ -1746,6 +1671,10 @@ class PaperProcessor:
         if not papers:
             print("[错误] 无有效论文数据，程序退出")
             return
+
+        if not self.web_scraper.open_base_page():
+            print("[基准页错误] 启动阶段打开百度页失败，程序退出")
+            return
         
         total = len(papers)
         print(f"[处理开始] 共 {total} 篇论文，预计时间: ~{total * Config.DELAY_BETWEEN_PAPERS // 60}分钟")
@@ -1762,6 +1691,8 @@ class PaperProcessor:
                 self._wait_between_papers(i, total)
             
         self._print_summary(success_count, total)
+        self.web_scraper.close_work_tab()
+        print("[工作Tab] 全部论文处理完成，已执行收尾清理")
     
     def process_paper(self, paper: Dict, index: int, total: int) -> bool:
         """处理单篇论文"""
@@ -1773,6 +1704,10 @@ class PaperProcessor:
             print("[跳过] 无DOI，跳过处理")
             return False
         try:
+            if not self.web_scraper.ensure_base_page_current():
+                print("[基准页错误] 未能回到百度页，跳过当前DOI")
+                return False
+
             # 阶段1: 通过PyAutoGUI获取最终URL并提取域名
             final_url = self._get_final_url(doi)
             if not final_url:
@@ -1820,7 +1755,7 @@ class PaperProcessor:
                 # 原有处理流程
                 return self._process_normal_branch(doi, file_path, final_url, domain)
         finally:
-            self.web_scraper.close_work_tab_keep_anchor()
+            self.web_scraper.close_work_tab()
     
     def _get_final_url(self, doi: str) -> Optional[str]:
         """获取论文的最终URL"""

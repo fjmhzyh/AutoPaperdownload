@@ -41,7 +41,7 @@
         
 
       class="pb-page"
-         data-request-id="9f00aa6e911cfd88-SJC"  
+         data-request-id="9f00f37b24b5fe15-SJC"  
 
 >
 
@@ -101,7 +101,7 @@
 
 
 
-    <script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+    <script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('consent', 'default', {
@@ -125,8 +125,8 @@
     <!-- OsanoScriptEnabled: true -->
     
         <link rel="preload" href="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" as="script">
-        <script src="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" nonce="9f00aa6e911cfd88-SJC"></script>
-        <script nonce="9f00aa6e911cfd88-SJC">
+        <script src="https://cmp.osano.com/AzZdRbSORDOOzF9W/67a788d8-9344-4c9b-a3c2-89b5073ee231/osano.js" nonce="9f00f37b24b5fe15-SJC"></script>
+        <script nonce="9f00f37b24b5fe15-SJC">
             window.Osano.cm.addEventListener("osano-cm-script-blocked", function (item) {
                 console.log("Script blocked: " + item);
             });
@@ -162,13 +162,13 @@
 
 
 
-<script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+<script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
     var adConfig = {"pubgrade-enabled":true,"programmatic-enabled":true};
 </script>
 
 
-    <script src="https://cdn.confiant-integrations.net/aWonYuiOgPxwseCX0ZD_YAHL3qs/gpt_and_prebid/config.js" async nonce="9f00aa6e911cfd88-SJC"></script>
-    <script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+    <script src="https://cdn.confiant-integrations.net/aWonYuiOgPxwseCX0ZD_YAHL3qs/gpt_and_prebid/config.js" async nonce="9f00f37b24b5fe15-SJC"></script>
+    <script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
         //load the apstag.js library
         !function(a9,a,p,s,t,A,g){if(a[a9])return;function q(c,r){a[a9]._Q.push([c,r])}a[a9]={init:function(){q("i",arguments)},fetchBids:function(){q("f",arguments)},setDisplayBids:function(){},targetingKeys:function(){return[]},_Q:[]};A=p.createElement(s);A.async=!0;A.src=t;g=p.getElementsByTagName(s)[0];g.parentNode.insertBefore(A,g)}("apstag",window,document,"script","//c.amazon-adsystem.com/aax2/apstag.js");
 
@@ -182,7 +182,7 @@
 
 
 
-    <script nonce="9f00aa6e911cfd88-SJC">
+    <script nonce="9f00f37b24b5fe15-SJC">
         function isBrowserChrome() {
             return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
         }
@@ -404,8 +404,8 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
         
 
         
-            <meta property="og:image" content="https://onlinelibrary.wiley.com/cms/asset/df2b8f6d-111d-40e4-a70f-bcadc3d51be2/smll202401282-gra-0001-m.jpg?trick=1776819356230"/>
-            <meta property="twitter:image" content="https://onlinelibrary.wiley.com/cms/asset/df2b8f6d-111d-40e4-a70f-bcadc3d51be2/smll202401282-gra-0001-m.jpg?trick=1776819356230"/>
+            <meta property="og:image" content="https://onlinelibrary.wiley.com/cms/asset/df2b8f6d-111d-40e4-a70f-bcadc3d51be2/smll202401282-gra-0001-m.jpg?trick=1776822348422"/>
+            <meta property="twitter:image" content="https://onlinelibrary.wiley.com/cms/asset/df2b8f6d-111d-40e4-a70f-bcadc3d51be2/smll202401282-gra-0001-m.jpg?trick=1776822348422"/>
         
     
 
@@ -419,7 +419,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 
 
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="publication_doi" content="10.1002/smll.202401282"/>
-<meta name="event_group_key" content="db27b240-5808-45df-a778-35343643ce1a"/>
+<meta name="event_group_key" content="5eeb9de3-4f4a-4254-a752-82d8e9a08e02"/>
 
 
 
@@ -512,15 +512,15 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 <!-- from https://jira.prod.atypon.com/browse/LIT-663245 -->
 
 
-<script async src="/pb-assets/catchpoint-1549680351760.js" nonce="9f00aa6e911cfd88-SJC"></script>
+<script async src="/pb-assets/catchpoint-1549680351760.js" nonce="9f00f37b24b5fe15-SJC"></script>
 <meta name="referrer" content="origin-when-cross-origin"/>
 <link rel="shortcut icon" href="/favicon.ico">
 
-<script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+<script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
     var utmParamsEnabled = true;
 </script>
 
-<script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+<script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
     var _hmt = _hmt || [];
     (function () {
         var hm = document.createElement("script");
@@ -532,7 +532,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 </script>
 
 <!-- Ads scripts -->
-<script nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">
     var googletag = googletag || {};
     googletag.cmd = googletag.cmd || [];
 	var isProgrammaticAdsEnabled = window.adConfig?.["programmatic-enabled"] ?? false;
@@ -560,7 +560,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 </script>
 
 <!-- DoubleVerify Unity Tag queue (PERICLES-19717) - START -->
-<script nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">
     window.onDvtagReady = function (callback, timeout = 750) {
         const opt = { callback, timeout, timestamp: new Date().getTime() }
         dvtag.cmd.push(function () { dvtag.queueAdRequest(opt) })
@@ -573,7 +573,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 </script>
 <!-- DoubleVerify Unity Tag queue - END --> 
 
-<script nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">
     googletag.cmd.push(function () {
         var sizes = {
             leaderboard: googletag.sizeMapping()
@@ -671,9 +671,9 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 
 <!--PERICLES-19058-->
 
-<script src="https://servedbydoceree.doceree.com/resources/p/doc_ad/84/281/dc.js" data-siteId="281" data-platId="1" data-pubId="84" nonce="9f00aa6e911cfd88-SJC"></script>
+<script src="https://servedbydoceree.doceree.com/resources/p/doc_ad/84/281/dc.js" data-siteId="281" data-platId="1" data-pubId="84" nonce="9f00f37b24b5fe15-SJC"></script>
 
-<script nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">
     /* User Details */
     if (Osano && Osano.cm && Osano.cm.getConsent().MARKETING) {
         var $userConsent = "1";
@@ -690,7 +690,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
     }
 </script>
 
-<script nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">
     const params = new URLSearchParams();
 	params.set('site', 'wol');
 	params.set('page', window.adobeDataLayer?.[0]?.page?.type || 'n/a');
@@ -766,9 +766,9 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 
     
 <!-- loading Javascript for using the persistence Service -->
-    <script src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~thiss-ds.js" nonce="9f00aa6e911cfd88-SJC"></script>
+    <script src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~thiss-ds.js" nonce="9f00f37b24b5fe15-SJC"></script>
 
-    <script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+    <script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
 
         function getParameter(parameterName) {
             let result = null,
@@ -869,7 +869,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
                         accept: {
                             text: "application/json"
                         },
-                        data: {doi: doi, entityid: entityId, entityTitle: entityTitle, eventGroupKey: 'db27b240-5808-45df-a778-35343643ce1a'}
+                        data: {doi: doi, entityid: entityId, entityTitle: entityTitle, eventGroupKey: '5eeb9de3-4f4a-4254-a752-82d8e9a08e02'}
 
                     }).done(function (status) {
                         return resolve(status);
@@ -932,7 +932,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
         });
 
     </script>
-    <script nonce="9f00aa6e911cfd88-SJC">
+    <script nonce="9f00f37b24b5fe15-SJC">
             (function() {
 
                 if (isBrowserChrome()) {
@@ -944,11 +944,11 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
                 }
             })();
         </script>
-    <script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+    <script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
         (function() {
             function riskifiedBeaconLoad() {
                 var store_domain = 'https://onlinelibrary.wiley.com';
-                var session_id = '2D6F43DCCF0B37EF079181E3708B0C9B';
+                var session_id = 'CD96C1FDA8A5F1675C023092203C8CD2';
                 var url = ('https:' == document.location.protocol ? 'https://' : 'http://')
                     + "beacon.riskified.com?shop=" + store_domain + "&sid=" + session_id;
                 var s = document.createElement('script');
@@ -1477,7 +1477,7 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
         <div class="pb-las">
             <aside role="complementary">
    <div id="advert-leaderboard" class="advert advert-leaderboard">
-      <script nonce="9f00aa6e911cfd88-SJC">
+      <script nonce="9f00f37b24b5fe15-SJC">
          console.time('gpt ready');
          googletag.cmd.push( function () {
             console.timeEnd('gpt ready');
@@ -1525,8 +1525,8 @@ var $GooglePublisherCategory = "/21618997260/wly.mat.sci_000078/small_2296";</sc
 
 
         
-        <script src="/pb-assets/js/sticky-ad-1773669002823.js" nonce="9f00aa6e911cfd88-SJC"></script>
-<script nonce="9f00aa6e911cfd88-SJC">
+        <script src="/pb-assets/js/sticky-ad-1773669002823.js" nonce="9f00f37b24b5fe15-SJC"></script>
+<script nonce="9f00f37b24b5fe15-SJC">
 StickyAds.init([
     {
         adSelector: '#advert-rail-1',
@@ -1578,7 +1578,7 @@ StickyAds.init([
         
         
 </div><div class="article-citation"><div class="citation">
-   <div class="pb-dropzone" data-pb-dropzone="publicaitonContent-series-title"><div id="journal-banner-text" class="journal-banner-text"><a href="/journal/16136829" title="Small homepage">Small</a></div><a href="/toc/16136829/2024/20/36" class="volume-issue">Volume 20, Issue 36</a><span class="citation__eLocator"> 2401282</span><a href="/journal/16136829" title="Small homepage" class="citation--logo"><img id="journal-banner-image" test="test-value" alt="Small" src="/pb-assets/journal-banners/16136829-1590659348003.jpg" class="journal-banner-image"></a><script nonce="9f00aa6e911cfd88-SJC">var image = new Image();
+   <div class="pb-dropzone" data-pb-dropzone="publicaitonContent-series-title"><div id="journal-banner-text" class="journal-banner-text"><a href="/journal/16136829" title="Small homepage">Small</a></div><a href="/toc/16136829/2024/20/36" class="volume-issue">Volume 20, Issue 36</a><span class="citation__eLocator"> 2401282</span><a href="/journal/16136829" title="Small homepage" class="citation--logo"><img id="journal-banner-image" test="test-value" alt="Small" src="/pb-assets/journal-banners/16136829-1590659348003.jpg" class="journal-banner-image"></a><script nonce="9f00f37b24b5fe15-SJC">var image = new Image();
 
 image.onerror = function() {
   // if the image does not exist
@@ -1612,13 +1612,13 @@ image.src = "/pb-assets/journal-banners/16136829-1590659348003.jpg";</script></d
                <p class="author-type mb-1">Corresponding Author</p>
                <p class="author-name">Dongdong Su</p>
                <ul class="rlist sm-account">
-                  <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#cdaea5a0beb8a9a98dafa7b8b9e3a8a9b8e3aea3"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="80e3e8edf3f5e4e4c0e2eaf5f4aee5e4f5aee3ee">[email&#160;protected]</span></span></a></li>
+                  <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#8ae9e2e7f9ffeeeecae8e0fffea4efeeffa4e9e4"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="0c6f64617f7968684c6e66797822696879226f62">[email&#160;protected]</span></span></a></li>
                </ul>
                <ul class="rlist sm-account">
                   <li class="sm-account__item"><a target="_blank" class="sm-account__link" href="https://orcid.org/0000-0002-7463-4466"><i aria-hidden="true" class="icon-orcid"></i><span>orcid.org/0000-0002-7463-4466</span></a></li>
                </ul>
                <p>Center of Excellence for Environmental Safety and Biological Effects, Beijing Key Laboratory for Green Catalysis and Separation, Department of Chemistry, Beijing University of Technology, Beijing, 100124 P. R. China</p>
-               <p>E-mail: <a class="corr-email" title="Link to email address" href="/cdn-cgi/l/email-protection#3c5f54514f4958587c5e56494812595849125f52"><span><span class="__cf_email__" data-cfemail="42212a2f3137262602202837366c2726376c212c">[email&#160;protected]</span></span></a></p><a class="moreInfoLink" href="/authored-by/Su/Dongdong">Search for more papers by this author</a></div></span></div>
+               <p>E-mail: <a class="corr-email" title="Link to email address" href="/cdn-cgi/l/email-protection#55363d382620313115373f20217b3031207b363b"><span><span class="__cf_email__" data-cfemail="e88b80859b9d8c8ca88a829d9cc68d8c9dc68b86">[email&#160;protected]</span></span></a></p><a class="moreInfoLink" href="/authored-by/Su/Dongdong">Search for more papers by this author</a></div></span></div>
    </div>
    <div class="loa-wrapper loa-authors hidden-xs desktop-authors">
       <div id="sb-1" class="accordion">
@@ -1643,13 +1643,13 @@ image.src = "/pb-assets/journal-banners/16136829-1590659348003.jpg";</script></d
                      <p class="author-type mb-1">Corresponding Author</p>
                      <p class="author-name">Dongdong Su</p>
                      <ul class="rlist sm-account">
-                        <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#781b10150b0d1c1c381a120d0c561d1c0d561b16"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="c1a2a9acb2b4a5a581a3abb4b5efa4a5b4efa2af">[email&#160;protected]</span></span></a></li>
+                        <li class="sm-account__item"><a class="sm-account__link" title="Link to email address" href="/cdn-cgi/l/email-protection#0c6f64617f7968684c6e66797822696879226f62"><i aria-hidden="true" class="icon-ic_mail_solid"></i><span><span class="__cf_email__" data-cfemail="fc9f94918f899898bc9e968988d2999889d29f92">[email&#160;protected]</span></span></a></li>
                      </ul>
                      <ul class="rlist sm-account">
                         <li class="sm-account__item"><a target="_blank" class="sm-account__link" href="https://orcid.org/0000-0002-7463-4466"><i aria-hidden="true" class="icon-orcid"></i><span>orcid.org/0000-0002-7463-4466</span></a></li>
                      </ul>
                      <p>Center of Excellence for Environmental Safety and Biological Effects, Beijing Key Laboratory for Green Catalysis and Separation, Department of Chemistry, Beijing University of Technology, Beijing, 100124 P. R. China</p>
-                     <p>E-mail: <a class="corr-email" title="Link to email address" href="/cdn-cgi/l/email-protection#0b686366787e6f6f4b69617e7f256e6f7e256865"><span><span class="__cf_email__" data-cfemail="e3808b8e90968787a381899697cd868796cd808d">[email&#160;protected]</span></span></a></p><a class="moreInfoLink" href="/authored-by/Su/Dongdong">Search for more papers by this author</a></div></span></div>
+                     <p>E-mail: <a class="corr-email" title="Link to email address" href="/cdn-cgi/l/email-protection#12717a7f6167767652707867663c7776673c717c"><span><span class="__cf_email__" data-cfemail="8be8e3e6f8feefefcbe9e1feffa5eeeffea5e8e5">[email&#160;protected]</span></span></a></p><a class="moreInfoLink" href="/authored-by/Su/Dongdong">Search for more papers by this author</a></div></span></div>
          </div>
       </div>
    </div>
@@ -2036,7 +2036,7 @@ QR Code</button></li></ul></div></div>
     
         <div class="pb-las">
             <div id="advert-rail-1" class="advert advert-rail">
-	<script nonce="9f00aa6e911cfd88-SJC">
+	<script nonce="9f00f37b24b5fe15-SJC">
 		googletag.cmd.push(function () {
 			onDvtagReady(function () {
 				googletag.display( 'advert-rail-1' );
@@ -2078,7 +2078,7 @@ QR Code</button></li></ul></div></div>
 
 
         
-        <!-- Predefine variables with safe defaults to avoid errors in old Pug/Jade--><!-- Build subjects string manually to work on old Pug/Jade environment--><!-- Build regions string manually to work on old Pug/Jade environment--><wiley-jobs-widget journal-id="2296" subject="be,ls30,ch,ee,eeb0,be00,ee00,ms00,ch00,ph00,ls,ms,nt40,nt,nt00,ch90,ph,msg0,ch91" region="APAC,SGP" limit="5"></wiley-jobs-widget><script nonce="9f00aa6e911cfd88-SJC" async data-widget-id="jobs-widget" src="https://wiley-jobs-widget.madgexjb.com/public/widget.js"></script>
+        <!-- Predefine variables with safe defaults to avoid errors in old Pug/Jade--><!-- Build subjects string manually to work on old Pug/Jade environment--><!-- Build regions string manually to work on old Pug/Jade environment--><wiley-jobs-widget journal-id="2296" subject="be,ls30,ch,ee,eeb0,be00,ee00,ms00,ch00,ph00,ls,ms,nt40,nt,nt00,ch90,ph,msg0,ch91" region="APAC,SGP" limit="5"></wiley-jobs-widget><script nonce="9f00f37b24b5fe15-SJC" async data-widget-id="jobs-widget" src="https://wiley-jobs-widget.madgexjb.com/public/widget.js"></script>
 
         </div>
     
@@ -2096,7 +2096,7 @@ QR Code</button></li></ul></div></div>
         <div class="pb-las">
             <aside>
 	<div id="advert-rail-2" class="advert advert-rail">
-		<script nonce="9f00aa6e911cfd88-SJC">
+		<script nonce="9f00f37b24b5fe15-SJC">
 			googletag.cmd.push( function () {
 				onDvtagReady(function () {
 					googletag.display( 'advert-rail-2' );
@@ -2146,7 +2146,7 @@ Simply select your manager software from the list below and click on download.
             Use the dropdown list to choose how to format the bibliographic data you're harvesting. Several citation manager formats are available, including EndNote and BibTex. You can then copy the formatted citation (as displayed) or download it as file, to your device. If the RefWorks format is chosen, the 'Download' button will be replaced with an option to directly export to RefWorks
         </p>
 
-</div></div></div></div></div></div></div></div><script nonce="9f00aa6e911cfd88-SJC">var articleRef = document.querySelector('.article__body:not(.show-references) .article__references');
+</div></div></div></div></div></div></div></div><script nonce="9f00f37b24b5fe15-SJC">var articleRef = document.querySelector('.article__body:not(.show-references) .article__references');
 if (articleRef) { articleRef.style.display = "none"; }
 
 </script><div id="figure-viewer" data-ux3-wrapper="figure-viewer" data-ux3-transformed-by="figureInit" data-ux3-role="parent" role="dialog" aria-label="Figure Viewer" class="figure-viewer"><div class="figure-viewer__reg__top clearfix"><div class="figure-viewer__top__right"><a href="#" data-ux3-role="controller" role="button" title="close" aria-label="close" class="figure-viewer__ctrl__close figure-viewer__cycleElement"><span class="icon-close_thin"><span class="sr-only">Close Figure Viewer</span></span></a></div><div class="figure-viewer__top__left"><button title="zoom out" aria-label="zoom out" class="figure-viewer__label__zoom icon-zoom-out zoom-out figure-viewer__cycleElement"></button><span tabindex="1" class="zoomSlider js__zoom-slider ui-slider"><input type="range" title="zoom control" aria-label="zoom control" class="zoom-range figure-viewer__cycleElement"/></span><button title="zoom in" aria-label="zoom in" class="figure-viewer__label__zoom icon-zoom-in zoom-in figure-viewer__cycleElement"></button></div></div><div class="direction-control hidden"><span direction="up" tabindex="0" role="button" aria-label="move figure up" class="move-up figure-viewer__cycleElement"></span><span direction="right" tabindex="0" role="button" aria-label="move figure right" class="move-right figure-viewer__cycleElement"></span><span direction="down" tabindex="0" role="button" aria-label="move figure down" class="move-down figure-viewer__cycleElement"></span><span direction="left" tabindex="0" role="button" aria-label="move figure left" class="move-left figure-viewer__cycleElement"></span></div><div class="figure-viewer__reg__center"><div class="figure-viewer__cent__left"><div class="figure-viewer__hold__fig"><figure class="holder"></figure></div><a href="#" role="button" title="previous figure" aria-label="previous" class="figure-viewer__ctrl__prev figure-viewer__cycleElement"><span class="icon-arrow_l"><span class="sr-only">Previous Figure</span></span></a><a href="#" role="button" title="next figure" aria-label="next" class="figure-viewer__ctrl__next figure-viewer__cycleElement"><span class="icon-arrow_r"><span class="sr-only">Next Figure</span></span></a><div class="figure-viewer__hold__list clearfix container"></div></div><div class="figure-viewer__cent__right"><div class="figure-viewer__title"><a title="Open/Close Caption" href="#" aria-expanded="false" aria-label="Caption" class="figure-viewer__ctrl__caption figure-viewer__cycleElement"><span class="icon-doublearrow"></span><span class="figure-viewer__caption__label">Caption</span></a><span class="figure-viewer__title__text hidden"></span></div><div tabindex="0" role="complementary" class="figure-viewer__hold__figcap figure-viewer__cycleElement hidden"></div></div></div></div>
@@ -3043,7 +3043,7 @@ if (articleRef) { articleRef.style.display = "none"; }
 
 
         
-        <script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+        <script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
     window.addEventListener('load', () => {
         document.querySelectorAll('.admin-bar-popup-menu ul li')?.forEach(function (li) {
             const anchor = li.querySelector('a');
@@ -3074,9 +3074,9 @@ if (articleRef) { articleRef.style.display = "none"; }
                 
             </div>
         </div>
-        <script src="/products/acropolis/pericles/releasedAssets/js/build.lazyload.bundle-aeda3538a44647046fe7.js" nonce="9f00aa6e911cfd88-SJC"></script><script src="/products/acropolis/pericles/releasedAssets/js/main.bundle-6d05fe77fb5d24a6a408.js" nonce="9f00aa6e911cfd88-SJC"></script><script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~product.js" nonce="9f00aa6e911cfd88-SJC"></script>
+        <script src="/products/acropolis/pericles/releasedAssets/js/build.lazyload.bundle-aeda3538a44647046fe7.js" nonce="9f00f37b24b5fe15-SJC"></script><script src="/products/acropolis/pericles/releasedAssets/js/main.bundle-6d05fe77fb5d24a6a408.js" nonce="9f00f37b24b5fe15-SJC"></script><script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~product.js" nonce="9f00f37b24b5fe15-SJC"></script>
 
-<script nonce="9f00aa6e911cfd88-SJC">var _prum=[['id','59e8fecb3847311aab7b23c6'],['mark','firstbyte',(new Date()).getTime()]];(function(){var s=document.getElementsByTagName('script')[0],p=document.createElement('script');p.async='async';p.src='//rum-static.pingdom.net/prum.min.js';s.parentNode.insertBefore(p,s);})();</script><script type="text/javascript" nonce="9f00aa6e911cfd88-SJC">
+<script nonce="9f00f37b24b5fe15-SJC">var _prum=[['id','59e8fecb3847311aab7b23c6'],['mark','firstbyte',(new Date()).getTime()]];(function(){var s=document.getElementsByTagName('script')[0],p=document.createElement('script');p.async='async';p.src='//rum-static.pingdom.net/prum.min.js';s.parentNode.insertBefore(p,s);})();</script><script type="text/javascript" nonce="9f00f37b24b5fe15-SJC">
         setTimeout(() => {
             let _bnw = window, _bna = atob("bG9jYXRpb24="), _bnb = atob("b3JpZ2lu"), _hn = _bnw[_bna][_bnb],
                 _bnt = btoa(_hn + new Array(5 - _hn.length % 4).join(" "));
@@ -3109,7 +3109,7 @@ if (articleRef) { articleRef.style.display = "none"; }
             
             
                 
-                    <script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~article-metrics-phase2.js" nonce="9f00aa6e911cfd88-SJC"></script>
+                    <script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~article-metrics-phase2.js" nonce="9f00f37b24b5fe15-SJC"></script>
                 
             
         
@@ -3123,11 +3123,11 @@ if (articleRef) { articleRef.style.display = "none"; }
 
 
 
-    <script nonce="9f00aa6e911cfd88-SJC">
+    <script nonce="9f00f37b24b5fe15-SJC">
         fetch("https://wiley.met.vgwort.de/na/pw-base64-dmd6bS42MDY1MC0xMC4xMDAyLXNtbGwuMjAyNDAxMjgy", {mode: 'no-cors', referrerPolicy: 'unsafe-url'});
     </script>
-<script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~full-text-analytics.js" nonce="9f00aa6e911cfd88-SJC"></script>
-<script type="application/javascript" nonce="9f00aa6e911cfd88-SJC">
+<script type="text/javascript" src="/wro/f5e7ffe6d6d1192a4defdde88dc425c93326c6ed~full-text-analytics.js" nonce="9f00f37b24b5fe15-SJC"></script>
+<script type="application/javascript" nonce="9f00f37b24b5fe15-SJC">
         document.querySelectorAll('.pericles-input-class').forEach(function (element) {
             element.addEventListener('change', function () {
                 element.removeAttribute('aria-invalid')
@@ -3138,7 +3138,7 @@ if (articleRef) { articleRef.style.display = "none"; }
     
 
 
-            <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9f00aa6e68a0fd69","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.9.1","token":"f3dd54df2ac243bab2129483f57546d1"}' crossorigin="anonymous"></script>
+            <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9f00f37ae8a5fdee","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.9.1","token":"f3dd54df2ac243bab2129483f57546d1"}' crossorigin="anonymous"></script>
 </body>
         
         

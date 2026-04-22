@@ -46,6 +46,7 @@ _HANDLER_FACTORIES = {
     "ieeexplore.ieee.org": get_ieee_handler,
     "karger.com": get_karger_handler,
     "pubs.rsc.org": get_rsc_handler,
+    "chemistry-europe.onlinelibrary.wiley.com":get_advanced_wiley_handler
 }
 
 _HANDLER_MAP: Dict[str, PublisherLoginHandler] = {
