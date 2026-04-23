@@ -13,8 +13,7 @@ class AdvancedOnlinelibraryWileyComLoginHandler(PublisherLoginHandler):
         login_button_img = ctx.photo("advanced.onlinelibrary.wiley.com1.png")
         submit_button_img = ctx.photo("advanced.onlinelibrary.wiley.com2.png")
         # 检查文章是否开源，开源则跳过登陆流程
-        open_access = ctx.check_keyword_exist("open access")
-        full_access = ctx.check_keyword_exist("full access")
+        open_access,full_access = ctx.check_keywords_exist(["open access","full access"])
         if open_access or full_access:
             ctx.log("[开源检测]文章为open access, 无需登陆")
             return True
@@ -25,6 +24,7 @@ class AdvancedOnlinelibraryWileyComLoginHandler(PublisherLoginHandler):
 def _run_wiley_two_step_flow(ctx: LoginContext, login_button_img: str, submit_button_img: str) -> bool:
     clicked_first = False
     ctx.log("[图像识别] 正在查找登录按钮1...")
+    ctx.search_keyword('pdf')
     button_pos = ctx.locate_image(login_button_img)
     if button_pos:
         ctx.log("[图像识别] 找到登录按钮1")

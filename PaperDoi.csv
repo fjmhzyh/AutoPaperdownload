@@ -1,11 +1,9 @@
-﻿DOI,DownloadStatus,Filename,URL,DownloadURL,SIDownloadStatus,SIFilename,HTMLFilename,HTMLFile
-10.1021/jacs.6c00080,,,,,,,,
-10.1016/j.jconrel.2024.04.052,,,,,,,,
-10.1002/adma.202400307,Success,Advanced Materials - 2024 - Xu - Tumor‐Tailored Ionizable Lipid Nanoparticles Facilitate IL‐12 Circular RNA Delivery for_2.pdf,,https://advanced.onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202400307?download=true,,,,/Users/fjm/Code/AutoPaperdownload/html/advanced.onlinelibrary.wiley.com_paper_1.txt
-10.1016/j.jconrel.2024.04.052,,,,,,,,/Users/fjm/Code/AutoPaperdownload/html/www.sciencedirect.com_paper_1.txt
-10.1002/smll.202401282,Success,Small - 2024 - Bian - Organ‐Targeted Ionizable Lipid Nanoparticles Facilitate Sequence‐Activated Fluorogenic Probe for_1.pdf,,https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/smll.202401282?download=true,,,,/Users/fjm/Code/AutoPaperdownload/html/onlinelibrary.wiley.com_paper_3.txt
-10.1002/cmdc.202400199,Success,ChemMedChem - 2024 - He - Chemical Design Strategy of Ionizable Lipids for In Vivo mRNA Delivery_1.pdf,,https://chemistry-europe.onlinelibrary.wiley.com/doi/pdfdirect/10.1002/cmdc.202400199?download=true,,,,/Users/fjm/Code/AutoPaperdownload/html/chemistry-europe.onlinelibrary.wiley.com_paper_1.txt
-10.1093/bib/bbae186,,,,,,,,
-10.1021/acsnano.3c06225,Success,10.1021_acsnano.3c06225_pdf.pdf,,https://pubs.acs.org/doi/pdf/10.1021/acsnano.3c06225?ref=article_openPDF,,,,/Users/fjm/Code/AutoPaperdownload/html/pubs.acs.org_paper_5.txt
-10.7150/thno.91062,Success,10.7150_thno.91062_pdf.pdf,,https://www.thno.org/v14p2526.pdf,,,,/Users/fjm/Code/AutoPaperdownload/html/www.thno.org_paper_6.txt
-10.1002/anie.202405444,Success,Angew Chem Int Ed - 2024 - Zhang - One‐Component Cationic Lipids for Systemic mRNA Delivery to Splenic T Cells.pdf,,https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/anie.202405444?download=true,,,,/Users/fjm/Code/AutoPaperdownload/html/onlinelibrary.wiley.com_paper_7.txt
+﻿DOI,DownloadStatus,Filename,URL,DownloadURL,SIDownloadStatus,SIFilename,HTMLFilename,HTMLFile# rsc,HTMLFile
+10.1002/adfm.75490,,,,,,,,,
+10.1007/s13346-025-01824-w,,,,,,,,,/Users/fjm/Code/AutoPaperdownload/html/link.springer.com_paper_1.txt
+10.1039/d5tb02579f,Success,10.1039_d5tb02579f_pdf.pdf,,https://pubs.rsc.org/en/content/articlepdf/2026/tb/d5tb02579f,,,,,/Users/fjm/Code/AutoPaperdownload/html/pubs.rsc.org_paper_1.txt
+10.1007/s13346-025-01824-w,Success,10.1007_s13346-025-01824-w_pdf.pdf,,https://link.springer.com/content/pdf/10.1007/s13346-025-01824-w_reference.pdf,,,,,/Users/fjm/Code/AutoPaperdownload/html/link.springer.com_paper_1.txt
+10.1080/17435889.2025.2587715,,,,,,,,,
+10.1021/jacs.6c00080,,,,,,,,,
+10.1002/adfm.75490,,,,,,,,,
+10.1038/s41565-025-01958-5,,,,,,,,,

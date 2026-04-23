@@ -3,7 +3,9 @@ import re
 import csv
 import time
 import sys
+import html
 import subprocess
+import threading
 import pyautogui
 import pyperclip
 import json
@@ -12,6 +14,7 @@ import shutil
 import requests
 from urllib.parse import urlparse
 from urllib.parse import urljoin
+from urllib.parse import quote
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple, Set
 from selenium import webdriver
@@ -98,10 +101,36 @@ def _start_yanzhen_helper() -> Optional[subprocess.Popen]:
             command,
             cwd=os.path.dirname(script_path),
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
         )
-        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path}")
+        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path} 命令={' '.join(command)}")
+
+        def _forward_output() -> None:
+            try:
+                if not proc.stdout:
+                    return
+                for line in proc.stdout:
+                    text = line.rstrip("\n")
+                    if text:
+                        print(f"[验证码助手][输出] {text}")
+            except Exception as read_err:
+                print(f"[验证码助手] 读取输出失败: {read_err}")
+            finally:
+                try:
+                    if proc.stdout:
+                        proc.stdout.close()
+                except Exception:
+                    pass
+
+        threading.Thread(target=_forward_output, daemon=True, name="yanzhen-output-forward").start()
+        time.sleep(1)
+        exit_code = proc.poll()
+        if exit_code is not None:
+            print(f"[验证码助手] 启动后立即退出 Exit={exit_code}")
+            return None
         return proc
     except Exception as e:
         print(f"[验证码助手] 启动失败: {e}")
@@ -840,6 +869,7 @@ class WebScraper:
             hotkey("copy")
             pyautogui.press('esc')
             time.sleep(2)
+            pyautogui.press('esc')
             copied = (pyperclip.paste() or "").strip()
             if not copied:
                 if not quiet:
@@ -1239,7 +1269,7 @@ class FileDownloader:
         initial_snapshot: Dict[str, Set[str]],
     ) -> Tuple[bool, Optional[str]]:
         """使用模板的单次下载尝试"""
-        time.sleep(5)  # 等待页面加载
+        time.sleep(15)  # 等待页面加载
         
         # 尝试模拟Ctrl+S（如果需要）
         ctrl_s_delay = 0
@@ -1731,6 +1761,11 @@ class PaperProcessor:
                 return False
             
             self.csv_manager.update_row_by_doi(doi, {'HTMLFile': file_path})
+
+            normalized_domain = normalize_domain(domain) if domain else ""
+            if normalized_domain == "link.springer.com":
+                print("[Springer专用] 命中 link.springer.com，跳过direct判定，进入专用流程")
+                return self._process_springer_special(doi, file_path, final_url, domain)
                 
             # 检查是否需要使用新分支
             use_new_branch = False
@@ -1879,7 +1914,82 @@ class PaperProcessor:
     def _get_html_content(self, final_url: str) -> Optional[str]:
         """获取HTML内容（新标签页抓取，不影响当前会话页面）"""
         return self.web_scraper.fetch_html_in_new_tab(final_url)
-    
+
+    def _normalize_springer_link(self, link: str) -> str:
+        candidate = html.unescape(str(link or "").strip()).replace("\\/", "/")
+        if not candidate:
+            return ""
+        if candidate.startswith("//"):
+            return f"https:{candidate}"
+        if candidate.startswith("/"):
+            return urljoin("https://link.springer.com", candidate)
+        if candidate.startswith("http://") or candidate.startswith("https://"):
+            return candidate
+        return urljoin("https://link.springer.com/", candidate.lstrip("/"))
+
+    def _find_springer_download_url_from_html(self, html_path: str, doi: str) -> Optional[str]:
+        try:
+            with open(html_path, "r", encoding="utf-8", errors="ignore") as file:
+                content = file.read()
+        except Exception as e:
+            print(f"[Springer专用] 读取HTML失败: {html_path} | {e}")
+            return None
+
+        content = content.replace("\\/", "/")
+        links = re.findall(r'href=[\'"]?([^\'" >]+)', content, flags=re.IGNORECASE)
+        print(f"[Springer专用] HTML链接候选数量: {len(links)}")
+
+        doi_value = str(doi or "").strip()
+        if not doi_value:
+            print("[Springer专用] DOI为空，无法匹配模板链接")
+            return None
+
+        doi_encoded = quote(doi_value, safe="")
+        template_rules = [
+            ("_reference.pdf", [f"/content/pdf/{doi_value}_reference.pdf", f"/content/pdf/{doi_encoded}_reference.pdf"]),
+            (".pdf", [f"/content/pdf/{doi_value}.pdf", f"/content/pdf/{doi_encoded}.pdf"]),
+        ]
+
+        for rule_name, tokens in template_rules:
+            for raw_link in links:
+                normalized_link = self._normalize_springer_link(raw_link)
+                if not normalized_link:
+                    continue
+                if any(token in normalized_link for token in tokens):
+                    print(f"[Springer专用] 命中模板{rule_name}: {normalized_link}")
+                    return normalized_link
+
+        print("[Springer专用] 未在HTML中找到Springer模板链接")
+        return None
+
+    def _process_springer_special(self, doi: str, file_path: str, final_url: str, domain: str) -> bool:
+        """link.springer.com专用流程：从HTML中查找两个模板链接，命中即下载。"""
+        print(f"[Springer专用] 开始处理: DOI={doi} HTML={file_path}")
+        download_url = self._find_springer_download_url_from_html(file_path, doi)
+        if not download_url:
+            self.csv_manager.update_row_by_doi(doi, {"DownloadStatus": "Failed"})
+            return False
+
+        success, filename = self.file_downloader.download_with_template(doi, download_url, domain or "link.springer.com")
+        if success:
+            self.csv_manager.update_row_by_doi(
+                doi,
+                {
+                    "DownloadStatus": "Success",
+                    "Filename": filename,
+                    "DownloadURL": download_url,
+                },
+            )
+            print(f"[Springer专用] 下载成功: DOI={doi} URL={download_url}")
+            if filename:
+                final_path = os.path.join(Config.PAPER_DOWNLOAD_FOLDER, filename)
+                print(f"[Springer专用] 文件路径={final_path} 存在={os.path.exists(final_path)}")
+            return True
+
+        self.csv_manager.update_row_by_doi(doi, {"DownloadStatus": "Failed", "DownloadURL": download_url})
+        print(f"[Springer专用] 下载失败: DOI={doi} URL={download_url}")
+        return False
+
 
     def _process_new_branch(self, doi: str, domain: str, final_url: str, file_path: str) -> bool:
         """

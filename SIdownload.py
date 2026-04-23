@@ -4,6 +4,7 @@ import csv
 import time
 import sys
 import subprocess
+import threading
 import pyautogui
 import pyperclip
 from datetime import datetime
@@ -83,10 +84,36 @@ def _start_yanzhen_helper() -> Optional[subprocess.Popen]:
             command,
             cwd=os.path.dirname(script_path),
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
         )
-        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path}")
+        print(f"[验证码助手] 已启动 PID={proc.pid} 脚本={script_path} 命令={' '.join(command)}")
+
+        def _forward_output() -> None:
+            try:
+                if not proc.stdout:
+                    return
+                for line in proc.stdout:
+                    text = line.rstrip("\n")
+                    if text:
+                        print(f"[验证码助手][输出] {text}")
+            except Exception as read_err:
+                print(f"[验证码助手] 读取输出失败: {read_err}")
+            finally:
+                try:
+                    if proc.stdout:
+                        proc.stdout.close()
+                except Exception:
+                    pass
+
+        threading.Thread(target=_forward_output, daemon=True, name="yanzhen-output-forward").start()
+        time.sleep(1)
+        exit_code = proc.poll()
+        if exit_code is not None:
+            print(f"[验证码助手] 启动后立即退出 Exit={exit_code}")
+            return None
         return proc
     except Exception as e:
         print(f"[验证码助手] 启动失败: {e}")

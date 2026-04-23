@@ -133,7 +133,8 @@ def _hotkey_mapping() -> Dict[str, Tuple[str, ...]]:
             "print_page": ("command", "p"),
             "close_tab": ("command", "w"),
             "dismiss_dialog": ("esc",),
-            "shift_tab":("shift","tab")
+            "shift_tab":("shift","tab"),
+            "search":("command","f")
         }
     return {
         "new_tab": ("ctrl", "t"),
@@ -146,7 +147,8 @@ def _hotkey_mapping() -> Dict[str, Tuple[str, ...]]:
         "print_page": ("ctrl", "p"),
         "close_tab": ("ctrl", "w"),
         "dismiss_dialog": ("esc",),
-        "shift_tab":("shift","tab")
+        "shift_tab":("shift","tab"),
+        "search":("ctrl","f")
     }
 
 

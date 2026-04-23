@@ -9,8 +9,8 @@ class PubsRscOrgLoginHandler(PublisherLoginHandler):
     handler_name = "pubs_rsc_org"
 
     def login(self, domain: str, ctx: LoginContext) -> bool:
-        open_access = ctx.check_keyword_exist('This article is Open Access')
-        if open_access:
+        open_access,access_provided_by= ctx.check_keywords_exist(['This article is Open Access','access provided by'])
+        if open_access or access_provided_by:
             ctx.log(f'[免登陆检测]当前文章为open aceess，无需登陆')
             return True
         else:
@@ -46,7 +46,9 @@ class PubsRscOrgLoginHandler(PublisherLoginHandler):
                 ctx.log("[图像识别] 找到登录按钮3")
                 ctx.click(third_pos)
                 ctx.log("[登录] 已点击登录按钮3")
-                ctx.sleep(10)
+                ctx.sleep(15)
+                ctx.press("enter")
+                ctx.sleep(5)
                 return True
             # scroll_step = 900
             # scroll_delay = 1

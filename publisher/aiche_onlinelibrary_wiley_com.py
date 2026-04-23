@@ -13,8 +13,7 @@ class AicheWileyComLoginHandler(PublisherLoginHandler):
         ctx.log("[登录] 执行AIChE Wiley登录流程")
         login_button_img = ctx.photo("advanced.onlinelibrary.wiley.com1.png")
         submit_button_img = ctx.photo("advanced.onlinelibrary.wiley.com2.png")        # 检查文章是否开源，开源则跳过登陆流程
-        open_access = ctx.check_keyword_exist("open access")
-        full_access = ctx.check_keyword_exist("full access")
+        open_access,full_access = ctx.check_keywords_exist(["open access","full access"])
         if open_access or full_access:
             ctx.log("[开源检测]文章为open access, 无需登陆")
             return True

@@ -9,19 +9,24 @@ class LinkSpringerComLoginHandler(PublisherLoginHandler):
     handler_name = "link_springer_com"
 
     def login(self, domain: str, ctx: LoginContext) -> bool:
-        ctx.log("[登录] 执行Springer登录流程")
-        login_button_img = ctx.photo("link.springer.com1.png")
-        institution_input_img = ctx.photo("link.springer.com3.png")
-        select_institution_img = ctx.photo("link.springer.com2.png")
+        log_in_via, = ctx.check_keywords_exist(["log in via"])
+        if log_in_via:
+            ctx.log("[登录] 执行Springer登录流程")
+            login_button_img = ctx.photo("link.springer.com1.png")
+            institution_input_img = ctx.photo("link.springer.com3.png")
+            select_institution_img = ctx.photo("link.springer.com2.png")
 
-        if not self._open_institution_login(login_button_img, ctx):
-            return False
-        return self._select_institution(institution_input_img, select_institution_img, ctx)
+            if not self._open_institution_login(login_button_img, ctx):
+                return False
+            return self._select_institution(institution_input_img, select_institution_img, ctx)
+        else:
+            ctx.log("[免登陆检测]无需执行登陆流程")
+            return True
 
     @staticmethod
     def _open_institution_login(login_button_img: str, ctx: LoginContext) -> bool:
 
-        ctx.search_keyword('log in via')
+        ctx.search_keyword_and_clear('log in via')
         ctx.sleep(1)
 
         scroll_step = 900
@@ -67,12 +72,14 @@ class LinkSpringerComLoginHandler(PublisherLoginHandler):
         ctx.log(f"[图像识别] 找到机构输入框，位置: {input_pos}")
         ctx.click(input_pos)
         ctx.log("[登录] 已点击机构输入框")
-        ctx.sleep(20)
+        ctx.sleep(40)
         ctx.log("[键盘输入] 输入机构名称: Zhejiang University")
         ctx.type_text("Zhejiang University", interval=0.1)
-        ctx.sleep(1)
+        ctx.sleep(15)
         ctx.press('down', 9, 0.1)
         ctx.press('enter', 1, 0.2)
+        ctx.sleep(20)
+        ctx.press('enter')
 
         # scroll_step = 300
         # scroll_delay = 1

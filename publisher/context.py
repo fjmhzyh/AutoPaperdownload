@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pyautogui
 import pyperclip
@@ -126,7 +126,16 @@ class LoginContext:
             self.log(f"[浙大登陆]登陆失败")
         return not result
 
-    
+    def search_keyword_and_clear(self, keyword)->None:
+        modifykey = 'command' if is_mac() else 'ctrl'
+        pyautogui.hotkey(modifykey, 'f')
+        time.sleep(1) 
+        # 3. 输入搜索内容
+        pyautogui.typewrite(keyword, interval=0.1)
+        time.sleep(1)  # 稍微等待，让浏览器完成查找高亮
+        # 4. 按下 ESC 键关闭查找框
+        pyautogui.press('backspace',presses=len(keyword), interval=0.1)
+        pyautogui.press('esc')
     def search_keyword(self, keyword)->None:
         modifykey = 'command' if is_mac() else 'ctrl'
         pyautogui.hotkey(modifykey, 'f')
@@ -149,9 +158,9 @@ class LoginContext:
 
         try:
             # 先点击页面中部，尽量把焦点放到网页内容区域
-            screen_w, screen_h = pyautogui.size()
-            pyautogui.click(50, screen_h // 2)
-            self.sleep(0.2)
+            # screen_w, screen_h = pyautogui.size()
+            # pyautogui.click(50, screen_h // 2)
+            # self.sleep(0.2)
 
             try:
                 old_clipboard = pyperclip.paste()
@@ -162,7 +171,7 @@ class LoginContext:
             self.hotkey("select_all")
             self.sleep(0.2)
             self.hotkey("copy")
-            self.sleep(0.4)
+            self.sleep(1)
 
             content = (pyperclip.paste() or "")
             result = target.lower() in content.lower()
@@ -176,10 +185,73 @@ class LoginContext:
             except Exception:
                 pass
 
+            # 恢复页面到没选中的状态
+            self.search_keyword('1')
             return result
         except Exception as exc:
             self.log(f"[关键词检查] 检查失败: {exc}")
             return False
+
+    def check_keywords_exist(self, keywords: List[str]) -> Tuple[bool, ...]:
+        """
+        批量检查多个关键字是否存在于当前网页文本中，按传入顺序返回布尔元组。
+        例如:
+        a, b, c = ctx.check_keywords_exist(["hello", "roke", "abc"])
+        """
+        cleaned_keywords = []
+        for item in keywords or []:
+            key = str(item or "").strip()
+            if key:
+                cleaned_keywords.append(key)
+
+        if not cleaned_keywords:
+            self.log("[关键词批量检查] 关键字列表为空，返回空元组")
+            return tuple()
+
+        results = [False] * len(cleaned_keywords)
+        try:
+            try:
+                old_clipboard = pyperclip.paste()
+            except Exception:
+                old_clipboard = ""
+
+            pyperclip.copy("")
+            self.hotkey("select_all")
+            self.sleep(0.2)
+            self.hotkey("copy")
+            self.sleep(1)
+
+            content = (pyperclip.paste() or "")
+            content_lower = content.lower()
+
+            for idx, key in enumerate(cleaned_keywords):
+                results[idx] = key.lower() in content_lower
+
+            summary = ", ".join([f"{k}={results[i]}" for i, k in enumerate(cleaned_keywords)])
+            self.log(
+                f"[关键词批量检查] 内容长度={len(content)} 结果: {summary}"
+            )
+
+            try:
+                pyperclip.copy(old_clipboard)
+            except Exception:
+                pass
+
+            self.cancel_select_all()
+            return tuple(results)
+        except Exception as exc:
+            self.log(f"[关键词批量检查] 检查失败: {exc}")
+            return tuple(results)
+
+    def cancel_select_all(self):
+        platform_hotkey('search')
+        time.sleep(1) 
+        # 3. 输入搜索内容
+        pyautogui.typewrite(' ', interval=0.1)
+        time.sleep(1)  # 稍微等待，让浏览器完成查找高亮
+        pyautogui.press('enter',2,0.5)
+        # 4. 按下 ESC 键关闭查找框
+        pyautogui.press('esc')
 
     def click(self, target, y: Optional[int] = None) -> None:
         if y is None:

@@ -9,16 +9,20 @@ class TandfonlineComLoginHandler(PublisherLoginHandler):
     handler_name = "tandfonline_com"
 
     def login(self, domain: str, ctx: LoginContext) -> bool:
-        ctx.log("[登录] 执行 tandfonline 登录流程")
-        login_button_img = ctx.photo("tandfonline.com1.png")
-        institution_input_img = ctx.photo("tandfonline.com2.png")
-        select_institution_img = ctx.photo("tandfonline.com3.png")
+        access_provided_by, = ctx.check_keywords_exist(['Access provided by'])
+        if access_provided_by:
+            ctx.log('[免登陆检测]已登陆，无需再次登陆')
+        else:
+            ctx.log("[登录] 执行 tandfonline 登录流程")
+            login_button_img = ctx.photo("tandfonline.com1.png")
+            institution_input_img = ctx.photo("tandfonline.com2.png")
+            select_institution_img = ctx.photo("tandfonline.com3.png")
 
 
 
-        if not self._open_institution_login(login_button_img, ctx):
-            return False
-        return self._select_institution(institution_input_img, select_institution_img, ctx)
+            if not self._open_institution_login(login_button_img, ctx):
+                return False
+            return self._select_institution(institution_input_img, select_institution_img, ctx)
     
     @staticmethod
     def click_login_button(ctx: LoginContext) -> bool:
@@ -52,7 +56,7 @@ class TandfonlineComLoginHandler(PublisherLoginHandler):
         ctx: LoginContext,
     ) -> bool:
         
-        ctx.sleep(10)
+        ctx.sleep(50)
         
         ctx.search_keyword('Type the name')
         ctx.press('tab',1,0.5)
@@ -75,9 +79,12 @@ class TandfonlineComLoginHandler(PublisherLoginHandler):
         ctx.press('enter',1,0.2)
         ctx.log("[页面跳转] 等待跳转到浙大登陆页")
 
-        ctx.sleep(10)
+        ctx.sleep(15)
         ctx.press('enter')
-        ctx.sleep(10)
+        ctx.sleep(20)
+        ctx.click(200,200)
+        pyautogui.hotkey("command","w")
+        return True
         # if ctx.is_zju_login_page():
         #     return ctx.zju_login()
         # else:
