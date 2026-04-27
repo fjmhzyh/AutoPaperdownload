@@ -49,16 +49,61 @@ JSON_FILENAMES = {
 
 CSV_DEFAULT_PATH = data_path("PaperDoi.csv")
 LOG_DIR = data_path("log")
-ONBOARDING_CONFIG_PATH = data_path("onboarding.json")
+ONBOARDING_CONFIG_PATH = os.path.join(BUNDLE_DIR,"onboarding.json")
 ONBOARDING_DONE_FLAG_PATH = data_path("onboarding_done.flag")
 MAX_LOG_LINES = 5000
 PROC_FILE_DEDUP_WINDOW_SEC = 8.0
 DEFAULT_ONBOARDING_CONFIG = {
-    "resolutions": ["1920x1080", "1440x900"],
+    "resolutions": ["1920x1080"],
     "sites": [
-        {"label": "wiley", "url": "https://onlinelibrary.wiley.com/"},
-        {"label": "pub.rsc.org", "url": "https://pubs.rsc.org/"},
-        {"label": "pub.acs.org", "url": "https://pubs.acs.org/"},
+            {
+            "label": "wiley",
+            "url": "https://advanced.onlinelibrary.wiley.com/doi/10.1002/adfm.75490"
+            },
+            {
+            "label": "springer",
+            "url": "https://link.springer.com/article/10.1007/s13346-025-01824-w"
+            },
+            {
+            "label":"nature",
+            "url":"https://www.nature.com/articles/s41565-025-01958-5"
+            },
+            {
+            "label":"tandonline",
+            "url":"https://www.tandfonline.com/doi/full/10.1080/17435889.2025.2587715"
+            },
+            {
+            "label": "pub.rsc.org",
+            "url": "https://pubs.rsc.org/en/content/articlelanding/2026/tb/d5tb02579f"
+            },
+            {
+            "label": "pub.acs.org",
+            "url": "https://pubs.acs.org/doi/10.1021/jacs.6c00080"
+            },
+            {
+            "label":"pnas",
+            "url":"www.pnas.org"
+            },
+            {
+            "label": "mdpi",
+            "url": "www.mdpi.com"
+            },
+            {
+            "label": "cell",
+            "url": "www.cell.com"
+            },
+            {
+            "label": "dovepress",
+            "url": "www.dovepress.com"
+            },
+            {
+            "label": "sciencedirect",
+            "url": "https://www.sciencedirect.com/"
+            },
+            {
+            "label": "academic.oup.com",
+            "url": "academic.oup.com"
+            }
     ],
 }
 DEFAULT_PAPER_CSV_HEADERS = [
@@ -78,7 +123,7 @@ class PaperAutomationConsole:
         ensure_runtime_layout()
         self.root = root
         self.root.title(f"论文下载全流程自动化管理控制台 v{APP_VERSION}")
-        self.root.geometry("1120x620")
+        self.root.geometry("1120x650")
         self.is_closing = False
         self.root.report_callback_exception = self._report_callback_exception
         self.root.protocol("WM_DELETE_WINDOW", self._on_close_request)
@@ -196,34 +241,34 @@ class PaperAutomationConsole:
             "resolutions": list(DEFAULT_ONBOARDING_CONFIG["resolutions"]),
             "sites": [dict(item) for item in DEFAULT_ONBOARDING_CONFIG["sites"]],
         }
-        try:
-            if os.path.exists(ONBOARDING_CONFIG_PATH):
-                with open(ONBOARDING_CONFIG_PATH, "r", encoding="utf-8") as file:
-                    loaded = json.load(file)
-                if isinstance(loaded, dict):
-                    resolutions = loaded.get("resolutions")
-                    if isinstance(resolutions, list):
-                        parsed = [str(item).strip() for item in resolutions if str(item).strip()]
-                        if parsed:
-                            config["resolutions"] = parsed
+        # try:
+        #     if os.path.exists(ONBOARDING_CONFIG_PATH):
+        #         with open(ONBOARDING_CONFIG_PATH, "r", encoding="utf-8") as file:
+        #             loaded = json.load(file)
+        #         if isinstance(loaded, dict):
+        #             resolutions = loaded.get("resolutions")
+        #             if isinstance(resolutions, list):
+        #                 parsed = [str(item).strip() for item in resolutions if str(item).strip()]
+        #                 if parsed:
+        #                     config["resolutions"] = parsed
 
-                    sites = loaded.get("sites")
-                    if isinstance(sites, list):
-                        parsed_sites = []
-                        for item in sites:
-                            if not isinstance(item, dict):
-                                continue
-                            label = str(item.get("label", "")).strip()
-                            url = str(item.get("url", "")).strip()
-                            if not label or not url:
-                                continue
-                            if not (url.startswith("http://") or url.startswith("https://")):
-                                continue
-                            parsed_sites.append({"label": label, "url": url})
-                        if parsed_sites:
-                            config["sites"] = parsed_sites
-        except Exception as exc:
-            print(f"[引导页] onboarding.json 读取失败，使用默认配置: {exc}")
+        #             sites = loaded.get("sites")
+        #             if isinstance(sites, list):
+        #                 parsed_sites = []
+        #                 for item in sites:
+        #                     if not isinstance(item, dict):
+        #                         continue
+        #                     label = str(item.get("label", "")).strip()
+        #                     url = str(item.get("url", "")).strip()
+        #                     if not label or not url:
+        #                         continue
+        #                     if not (url.startswith("http://") or url.startswith("https://")):
+        #                         continue
+        #                     parsed_sites.append({"label": label, "url": url})
+        #                 if parsed_sites:
+        #                     config["sites"] = parsed_sites
+        # except Exception as exc:
+        #     print(f"[引导页] onboarding.json 读取失败，使用默认配置: {exc}")
         return config
 
     def _is_onboarding_done(self) -> bool:
@@ -486,11 +531,11 @@ class PaperAutomationConsole:
                 command=lambda s=site: self._open_onboarding_site(s),
                 width=14,
             )
-            row, col = divmod(idx, 3)
+            row, col = divmod(idx, 4)
             btn.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             self.onboarding_site_buttons[label] = btn
 
-        for col_idx in range(min(3, max(1, len(sites)))):
+        for col_idx in range(min(4, max(1, len(sites)))):
             options_wrap.grid_columnconfigure(col_idx, weight=1)
 
         self.onboarding_site_status_var.set(f"已点击网站: 0/{len(sites)}")

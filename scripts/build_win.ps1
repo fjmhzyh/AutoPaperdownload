@@ -51,6 +51,7 @@ $workers = @(
   'getdoi_worker',
   'paper_worker',
   'si_worker',
+  'yanzhen_worker',
   'clean_worker',
   'csv_turner_worker',
   'doiexacter_worker'

@@ -1352,7 +1352,14 @@ class FileDownloader:
         try:
             print("[下载] 模拟Ctrl+S保存文件...")
             time.sleep(20)
-            doi=doi.replace("/","_")  # 替换斜杠以避免文件名问题
+            doi = str(doi or "").strip().replace("/", "_")  # 替换斜杠以避免文件名问题
+            if not doi:
+                doi = "unknown_doi"
+            save_name = doi + "_pdf.pdf"
+            save_target = os.path.join(self.download_folder, save_name)
+            if not self._predelete_existing_target_file(save_target):
+                print(f"[下载警告] 保存预清理失败，已中止本次模拟保存: {save_target}")
+                return
             
             # 获取点击位置
             if domain :
@@ -1366,10 +1373,8 @@ class FileDownloader:
             pyautogui.press('enter')
             time.sleep(5)
 
-            save_name = doi + "_pdf.pdf"
             if is_windows():
                 # Windows保持原有路径输入逻辑
-                save_target = os.path.join(self.download_folder, save_name)
                 pyautogui.write(save_target, interval=0.03)
             else:
                 # mac: 使用“前往文件夹 + 粘贴”避免输入法把路径字符改写
@@ -1395,6 +1400,40 @@ class FileDownloader:
 
         except Exception as e:
             print(f"[下载警告] 模拟保存失败: {str(e)}")
+
+    def _predelete_existing_target_file(self, target_path: str) -> bool:
+        """保存前预清理同名文件（策略3）。"""
+        target_abs = os.path.abspath(target_path)
+        target_dir = os.path.abspath(self.download_folder)
+        try:
+            if os.path.commonpath([target_abs, target_dir]) != target_dir:
+                print(f"[保存预清理] 路径安全校验失败，目标不在下载目录内: {target_abs}")
+                return False
+        except Exception as e:
+            print(f"[保存预清理] 路径校验异常: {e}")
+            return False
+
+        ext = os.path.splitext(target_abs)[1].lower().lstrip(".")
+        allowed_exts = {str(item).lower().lstrip(".") for item in Config.DOCUMENT_EXTENSIONS}
+        if ext and ext not in allowed_exts:
+            print(f"[保存预清理] 扩展名不在允许列表，拒绝删除: {target_abs}")
+            return False
+
+        if not os.path.exists(target_abs):
+            print(f"[保存预清理] 目标不存在，无需删除: {target_abs}")
+            return True
+        if not os.path.isfile(target_abs):
+            print(f"[保存预清理] 目标不是普通文件，拒绝删除: {target_abs}")
+            return False
+
+        print(f"[保存预清理] 检测到同名文件，准备删除: {target_abs}")
+        try:
+            os.remove(target_abs)
+            print(f"[保存预清理] 删除成功: {target_abs}")
+            return True
+        except Exception as e:
+            print(f"[保存预清理] 删除失败: {target_abs} | {e}")
+            return False
             
     def _get_watch_dirs(self) -> List[str]:
         dirs = [self.download_folder] + list(Config.EXTRA_WATCH_DIRS)

@@ -10,6 +10,18 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# Windows GUI 子进程常见编码为 gbk；使用 replace 避免日志字符导致崩溃
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(errors="replace")
+    except Exception:
+        pass
+
 from image_resolver import log_profile_once, resolve_image_path
 
 IS_MAC = sys.platform == "darwin"
@@ -124,7 +136,7 @@ def simulate_human_click(location):
         final_x = int(final_x / 2) if IS_MAC else final_x
         final_y = int(final_y / 2) if IS_MAC else final_y
         
-        print(f"✅ 发现目标！坐标: ({final_x}, {final_y})，正在移动...")
+        print(f"[检测] 发现目标，坐标: ({final_x}, {final_y})，正在移动...")
         
         # 随机耗时 (0.5 - 1.2秒)
         move_time = random.uniform(0.5, 1.2)
@@ -143,17 +155,17 @@ def main():
     target_path = get_image_path()
     screen_width,screen_height = pyautogui.size()
     print("=" * 40)
-    print(f"🤖 超级自动点击器 (拟人+防崩版)")
+    print("超级自动点击器 (拟人+防崩版)")
     print(f"当前系统: {sys.platform}")
     print(f"当前分辨率: {screen_width}-{screen_height}")
-    print(f"📂 正在监听图片: {target_path}")
-    print(f"🛑 停止运行请按 Ctrl+C")
+    print(f"[监听] 目标图片: {target_path}")
+    print("停止运行请按 Ctrl+C")
     if SEARCH_REGION:
-        print(f"🔍 已启用区域搜索优化: {SEARCH_REGION}")
+        print(f"[优化] 已启用区域搜索: {SEARCH_REGION}")
     print("=" * 40)
     
     if not target_path or not os.path.exists(target_path):
-        print(f"❌ 错误：找不到文件 {target_path}")
+        print(f"[错误] 找不到文件: {target_path}")
         print("请确认对应系统+分辨率目录下存在目标图片。")
         return
 
@@ -172,7 +184,7 @@ def main():
             # 2. 如果找到（没报错且不为None），执行点击
             if location:
                 simulate_human_click(location)
-                print("⏳ 点击完成，冷却 3 秒...")
+                print("[点击] 已完成，冷却 3 秒...")
                 time.sleep(random.uniform(2.5, 4.0))
             
         except pyautogui.ImageNotFoundException:
@@ -182,8 +194,8 @@ def main():
         except Exception as e:
             # ⚠️ 捕获所有其他严重错误（如内存溢出、文件被占等）
             # 这里不会退出程序，而是打印错误并重试
-            print(f"\n⚠️ 发生错误: {e}")
-            print("🔄 程序未崩溃，将在 3 秒后尝试恢复...")
+            print(f"\n[异常] 发生错误: {e}")
+            print("[恢复] 程序未退出，将在 3 秒后重试...")
             time.sleep(3)
         
         # 每次扫描后的间隔
@@ -193,4 +205,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n🛑 用户手动停止了程序。")
+        print("\n[停止] 用户手动结束程序。")

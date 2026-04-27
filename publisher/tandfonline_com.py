@@ -12,13 +12,12 @@ class TandfonlineComLoginHandler(PublisherLoginHandler):
         access_provided_by, = ctx.check_keywords_exist(['Access provided by'])
         if access_provided_by:
             ctx.log('[免登陆检测]已登陆，无需再次登陆')
+            return True
         else:
             ctx.log("[登录] 执行 tandfonline 登录流程")
             login_button_img = ctx.photo("tandfonline.com1.png")
             institution_input_img = ctx.photo("tandfonline.com2.png")
             select_institution_img = ctx.photo("tandfonline.com3.png")
-
-
 
             if not self._open_institution_login(login_button_img, ctx):
                 return False

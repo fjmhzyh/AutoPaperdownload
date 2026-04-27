@@ -19,7 +19,7 @@ class ScienceDirectComLoginHandler(PublisherLoginHandler):
         else:
             return self.dispatch_login(ctx)
 
-    def dispatch_login(ctx:LoginContext)->bool:
+    def dispatch_login(self,ctx:LoginContext)->bool:
         login_button_image = ctx.photo("sciencedirect.com1.png")
         ctx.click(700, 1000)
         ctx.log("[图像识别] 正在查找登录按钮...")
